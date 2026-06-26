@@ -8,12 +8,6 @@ type RealtimeProjectsGridProps = {
   initialProjects: Project[];
 };
 
-type ProjectVotePayload = {
-  eventType: "INSERT" | "DELETE" | "UPDATE";
-  new: { project_id?: string } | null;
-  old: { project_id?: string } | null;
-};
-
 export function RealtimeProjectsGrid({
   initialProjects,
 }: RealtimeProjectsGridProps) {
@@ -42,30 +36,6 @@ export function RealtimeProjectsGrid({
       });
     }
 
-    function updateVoteCount(payload: ProjectVotePayload) {
-      const projectId =
-        payload.new?.project_id ?? payload.old?.project_id ?? null;
-
-      if (!projectId || payload.eventType === "UPDATE") {
-        return;
-      }
-
-      const delta = payload.eventType === "INSERT" ? 1 : -1;
-
-      startTransition(() => {
-        setProjects((currentProjects) =>
-          currentProjects.map((project) =>
-            project.id === projectId
-              ? {
-                  ...project,
-                  votesCount: Math.max(0, project.votesCount + delta),
-                }
-              : project,
-          ),
-        );
-      });
-    }
-
     const publicationsChannel = supabase
       .channel("project-publications")
       .on(
@@ -88,7 +58,7 @@ export function RealtimeProjectsGrid({
           schema: "public",
           table: "project_votes",
         },
-        (payload) => updateVoteCount(payload as ProjectVotePayload),
+        refreshProjects,
       )
       .subscribe();
 

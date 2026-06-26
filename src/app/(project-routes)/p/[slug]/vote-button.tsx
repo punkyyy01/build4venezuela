@@ -1,7 +1,7 @@
 "use client";
 
 import { SignInButton, useUser } from "@clerk/nextjs";
-import { useEffect, useOptimistic, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { createBrowserSupabase } from "@/lib/projects/browser-supabase";
 
@@ -12,11 +12,6 @@ type VoteButtonProps = {
   initialVoted: boolean;
 };
 
-type VoteState = {
-  count: number;
-  voted: boolean;
-};
-
 export function VoteButton({
   projectId,
   initialCount,
@@ -24,21 +19,8 @@ export function VoteButton({
   initialVoted,
 }: VoteButtonProps) {
   const { isSignedIn } = useUser();
-  const [confirmedVote, setConfirmedVote] = useState<VoteState>({
-    count: initialCount,
-    voted: initialVoted,
-  });
-  const [optimisticVote, flipOptimisticVote] = useOptimistic(
-    confirmedVote,
-    (currentVote, _action: "toggle") => {
-      const voted = !currentVote.voted;
-
-      return {
-        count: Math.max(0, currentVote.count + (voted ? 1 : -1)),
-        voted,
-      };
-    },
-  );
+  const [count, setCount] = useState(initialCount);
+  const [voted, setVoted] = useState(initialVoted);
   const [pending, startTransition] = useTransition();
   const signedIn = isSignedIn ?? initialSignedIn;
 
@@ -59,7 +41,8 @@ export function VoteButton({
       }
 
       const data = (await response.json()) as { count: number; voted: boolean };
-      setConfirmedVote(data);
+      setCount(data.count);
+      setVoted(data.voted);
     }
 
     const channel = supabase
@@ -82,23 +65,26 @@ export function VoteButton({
   }, [projectId]);
 
   function vote() {
-    if (pending) {
-      return;
-    }
+    const nextVoted = !voted;
+    const nextCount = Math.max(0, count + (nextVoted ? 1 : -1));
+
+    setVoted(nextVoted);
+    setCount(nextCount);
 
     startTransition(async () => {
-      flipOptimisticVote("toggle");
-
       const response = await fetch(`/api/projects/${projectId}/votes`, {
         method: "POST",
       });
 
       if (!response.ok) {
+        setVoted(voted);
+        setCount(count);
         return;
       }
 
       const data = (await response.json()) as { count: number; voted: boolean };
-      setConfirmedVote(data);
+      setCount(data.count);
+      setVoted(data.voted);
     });
   }
 
@@ -109,7 +95,7 @@ export function VoteButton({
           className="h-12 px-5 text-sm uppercase tracking-[0.18em]"
           type="button"
         >
-          Sign in to vote ({optimisticVote.count})
+          Sign in to vote ({count})
         </Button>
       </SignInButton>
     );
@@ -118,13 +104,11 @@ export function VoteButton({
   return (
     <Button
       className="h-12 px-5 text-sm uppercase tracking-[0.18em]"
-      aria-disabled={pending}
+      disabled={pending}
       onClick={vote}
       type="button"
     >
-      {optimisticVote.voted
-        ? `Voted (${optimisticVote.count})`
-        : `Vote (${optimisticVote.count})`}
+      {pending ? "Saving..." : voted ? `Voted (${count})` : `Vote (${count})`}
     </Button>
   );
 }
