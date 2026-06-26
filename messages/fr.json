@@ -95,7 +95,8 @@
       "title": "Construire avec urgence, pas avec du bruit.",
       "firstParagraph": "Le Venezuela fait face à une urgence majeure après deux forts tremblements de terre le 24 juin. Les derniers rapports font état d'au moins 188 morts et de plus de 1 500 blessés.",
       "secondParagraph": "Les équipes de secours recherchent toujours des survivants. Des vols d'aide internationale et des équipes de soutien ont commencé à arriver, tandis que les hôpitaux, les bâtiments et les communautés touchées font face à une crise humanitaire en cours.",
-      "latestInfo": "Voir les dernières informations"
+      "latestInfo": "Voir les dernières informations",
+      "latestInfoQuery": "Quelles sont les dernières nouvelles sur les tremblements de terre au Venezuela ?"
     },
     "impactStats": [
       { "value": "188+", "label": "personnes décédées" },

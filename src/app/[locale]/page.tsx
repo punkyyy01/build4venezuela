@@ -41,6 +41,9 @@ export default async function Home({ params }: Props) {
   const projectIdeas = t.raw("projectIdeas") as string[];
   const channels = t.raw("channels") as Channel[];
   const impactStats = t.raw("impactStats") as ImpactStat[];
+  const latestInfoHref = `https://www.perplexity.ai/?${new URLSearchParams({
+    q: t("context.latestInfoQuery"),
+  })}`;
 
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
@@ -153,7 +156,7 @@ export default async function Home({ params }: Props) {
             <p>{t("context.secondParagraph")}</p>
             <a
               className="inline-flex border border-accent/60 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-accent transition hover:border-foreground hover:bg-foreground hover:text-background"
-              href="https://www.perplexity.ai/?q=What%E2%80%99s%20the%20latest%20on%20the%20Venezuela%20earthquakes?"
+              href={latestInfoHref}
               rel="noreferrer"
               target="_blank"
             >

@@ -95,7 +95,8 @@
       "title": "Build with urgency, not noise.",
       "firstParagraph": "Venezuela is facing a major emergency after two strong earthquakes on June 24. The latest reports mention at least 188 people killed and more than 1,500 injured.",
       "secondParagraph": "Rescue teams are still searching for survivors. International aid flights and support teams have started arriving, while hospitals, buildings, and affected communities face a developing humanitarian crisis.",
-      "latestInfo": "See the latest information"
+      "latestInfo": "See the latest information",
+      "latestInfoQuery": "What's the latest on the Venezuela earthquakes?"
     },
     "impactStats": [
       { "value": "188+", "label": "people killed" },

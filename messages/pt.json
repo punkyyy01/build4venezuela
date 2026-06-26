@@ -95,7 +95,8 @@
       "title": "Construir com urgência, não com ruído.",
       "firstParagraph": "A Venezuela enfrenta uma grande emergência após dois fortes terremotos em 24 de junho. Os relatórios mais recentes mencionam pelo menos 188 mortos e mais de 1.500 feridos.",
       "secondParagraph": "Equipes de resgate ainda procuram sobreviventes. Voos de ajuda internacional e equipes de apoio começaram a chegar, enquanto hospitais, prédios e comunidades afetadas enfrentam uma crise humanitária em desenvolvimento.",
-      "latestInfo": "Ver as informações mais recentes"
+      "latestInfo": "Ver as informações mais recentes",
+      "latestInfoQuery": "Quais são as últimas notícias sobre os terremotos na Venezuela?"
     },
     "impactStats": [
       { "value": "188+", "label": "pessoas mortas" },

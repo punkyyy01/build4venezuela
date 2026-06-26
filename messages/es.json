@@ -95,7 +95,8 @@
       "title": "Construir con urgencia, no con ruido.",
       "firstParagraph": "Venezuela enfrenta una emergencia mayor después de dos fuertes terremotos el 24 de junio. Los reportes más recientes hablan de al menos 188 personas fallecidas y más de 1,500 heridas.",
       "secondParagraph": "Equipos de rescate siguen buscando sobrevivientes. Vuelos de ayuda internacional y equipos de apoyo ya comenzaron a llegar, mientras hospitales, edificios y comunidades afectadas enfrentan una crisis humanitaria en desarrollo.",
-      "latestInfo": "Ver información más reciente"
+      "latestInfo": "Ver información más reciente",
+      "latestInfoQuery": "¿Qué es lo último sobre los terremotos en Venezuela?"
     },
     "impactStats": [
       { "value": "188+", "label": "personas fallecidas" },
