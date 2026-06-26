@@ -10,12 +10,20 @@ const spamResultSchema = z.object({
   reason: z.string().max(500),
 });
 
-export async function checkProjectForSpam(input: ProjectFormInput) {
-  if (!env.AI_GATEWAY_API_KEY) {
+export type SpamCheckResult = z.infer<typeof spamResultSchema> & {
+  validationPassed: boolean;
+};
+
+export async function checkProjectForSpam(
+  input: ProjectFormInput,
+  spamValidationConfigured = Boolean(env.AI_GATEWAY_API_KEY),
+): Promise<SpamCheckResult> {
+  if (!spamValidationConfigured) {
     return {
       isSpam: false,
       confidence: 0,
       reason: "AI Gateway is not configured.",
+      validationPassed: false,
     };
   }
 
@@ -40,13 +48,14 @@ export async function checkProjectForSpam(input: ProjectFormInput) {
       ),
     });
 
-    return result.object;
+    return { ...result.object, validationPassed: true };
   } catch (error) {
     console.error("Project spam check failed", error);
     return {
       isSpam: false,
       confidence: 0,
-      reason: "AI spam check failed open.",
+      reason: "AI spam check failed. Please try again.",
+      validationPassed: false,
     };
   }
 }

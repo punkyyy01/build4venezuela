@@ -57,6 +57,16 @@ async function validateProjectSubmission(
 
   const spam = await checkProjectForSpam(parsed.data);
 
+  if (!spam.validationPassed) {
+    return {
+      ok: false,
+      values,
+      errors: {
+        form: spam.reason,
+      },
+    };
+  }
+
   if (spam.isSpam && spam.confidence >= 0.7) {
     return {
       ok: false,

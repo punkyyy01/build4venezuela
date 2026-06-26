@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
+    "test": "bun test",
     "format": "biome format --write"
   },
   "dependencies": {
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
     "@tailwindcss/postcss": "^4",
+    "@types/bun": "^1.3.14",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
