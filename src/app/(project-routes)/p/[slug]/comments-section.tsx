@@ -1,25 +1,26 @@
 "use client";
 
 import { SignInButton, useUser } from "@clerk/nextjs";
-import { type FormEvent, useEffect, useState, useTransition } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { createBrowserSupabase } from "@/lib/projects/browser-supabase";
-import type { ProjectComment } from "@/lib/projects/schema";
+import {
+  createProjectComment,
+  fetchProjectComments,
+  projectQueryKeys,
+  toggleProjectCommentVote,
+} from "@/lib/projects/queries";
+import {
+  type ProjectComment,
+  sortCommentsByVotes,
+} from "@/lib/projects/schema";
 
 type CommentsSectionProps = {
   projectId: string;
   initialComments: ProjectComment[];
   initialSignedIn: boolean;
-};
-
-type CommentResponse = {
-  comments: ProjectComment[];
-};
-
-type CommentErrorResponse = {
-  error?: string;
-  errors?: Record<string, string>;
 };
 
 const maxCommentLength = 1200;
@@ -31,32 +32,87 @@ export function CommentsSection({
 }: CommentsSectionProps) {
   const { isSignedIn } = useUser();
   const signedIn = isSignedIn ?? initialSignedIn;
-  const [comments, setComments] = useState(initialComments);
+  const queryClient = useQueryClient();
+  const commentsQueryKey = projectQueryKeys.comments(projectId);
+  const { data: comments = initialComments } = useQuery({
+    initialData: initialComments,
+    queryFn: () => fetchProjectComments(projectId),
+    queryKey: commentsQueryKey,
+  });
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [pendingComment, startCommentTransition] = useTransition();
-  const [pendingVote, startVoteTransition] = useTransition();
+  const commentMutation = useMutation({
+    mutationFn: (commentBody: string) =>
+      createProjectComment(projectId, commentBody),
+    onError: (mutationError: Error) => {
+      setError(mutationError.message);
+    },
+    onSuccess: (comment) => {
+      queryClient.setQueryData<ProjectComment[]>(commentsQueryKey, (current) =>
+        sortCommentsByVotes(
+          current?.some((currentComment) => currentComment.id === comment.id)
+            ? current
+            : [...(current ?? []), comment],
+        ),
+      );
+      setBody("");
+    },
+  });
+  const commentVoteMutation = useMutation({
+    mutationFn: (commentId: string) =>
+      toggleProjectCommentVote(projectId, commentId),
+    onError: (
+      _error,
+      _commentId,
+      context: { previousComments?: ProjectComment[] } | undefined,
+    ) => {
+      if (context?.previousComments) {
+        queryClient.setQueryData(commentsQueryKey, context.previousComments);
+      }
+      queryClient.invalidateQueries({ queryKey: commentsQueryKey });
+    },
+    onMutate: async (commentId) => {
+      await queryClient.cancelQueries({ queryKey: commentsQueryKey });
+      const previousComments =
+        queryClient.getQueryData<ProjectComment[]>(commentsQueryKey);
+
+      queryClient.setQueryData<ProjectComment[]>(commentsQueryKey, (current) =>
+        sortCommentsByVotes(
+          current?.map((comment) => {
+            if (comment.id !== commentId) {
+              return comment;
+            }
+
+            const voted = !comment.voted;
+            return {
+              ...comment,
+              voted,
+              votesCount: Math.max(0, comment.votesCount + (voted ? 1 : -1)),
+            };
+          }) ?? [],
+        ),
+      );
+
+      return { previousComments };
+    },
+    onSuccess: (data, commentId) => {
+      queryClient.setQueryData<ProjectComment[]>(commentsQueryKey, (current) =>
+        sortCommentsByVotes(
+          current?.map((comment) =>
+            comment.id === commentId
+              ? { ...comment, votesCount: data.count, voted: data.voted }
+              : comment,
+          ) ?? [],
+        ),
+      );
+    },
+  });
 
   useEffect(() => {
     const supabase = createBrowserSupabase();
 
     if (!supabase) {
       return;
-    }
-
-    let active = true;
-
-    async function refreshComments() {
-      const response = await fetch(`/api/projects/${projectId}/comments`, {
-        cache: "no-store",
-      });
-
-      if (!(active && response.ok)) {
-        return;
-      }
-
-      const data = (await response.json()) as CommentResponse;
-      setComments(data.comments);
     }
 
     const commentsChannel = supabase
@@ -69,7 +125,10 @@ export function CommentsSection({
           table: "project_comments",
           filter: `project_id=eq.${projectId}`,
         },
-        refreshComments,
+        () =>
+          queryClient.invalidateQueries({
+            queryKey: projectQueryKeys.comments(projectId),
+          }),
       )
       .subscribe();
 
@@ -82,16 +141,18 @@ export function CommentsSection({
           schema: "public",
           table: "project_comment_votes",
         },
-        refreshComments,
+        () =>
+          queryClient.invalidateQueries({
+            queryKey: projectQueryKeys.comments(projectId),
+          }),
       )
       .subscribe();
 
     return () => {
-      active = false;
       supabase.removeChannel(commentsChannel);
       supabase.removeChannel(commentVotesChannel);
     };
-  }, [projectId]);
+  }, [projectId, queryClient]);
 
   function submitComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -107,79 +168,16 @@ export function CommentsSection({
       return;
     }
 
-    startCommentTransition(async () => {
-      setError(null);
-      const response = await fetch(`/api/projects/${projectId}/comments`, {
-        body: JSON.stringify({ body: trimmedBody }),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        const data = (await response.json()) as CommentErrorResponse;
-        setError(data.errors?.body ?? data.error ?? "Could not add comment.");
-        return;
-      }
-
-      const comment = (await response.json()) as ProjectComment;
-      setComments((currentComments) =>
-        currentComments.some(
-          (currentComment) => currentComment.id === comment.id,
-        )
-          ? currentComments
-          : [...currentComments, comment],
-      );
-      setBody("");
-    });
+    setError(null);
+    commentMutation.mutate(trimmedBody);
   }
 
   function vote(commentId: string) {
-    if (pendingVote) {
+    if (commentVoteMutation.isPending) {
       return;
     }
 
-    startVoteTransition(async () => {
-      setComments((currentComments) =>
-        currentComments.map((comment) => {
-          if (comment.id !== commentId) {
-            return comment;
-          }
-
-          const voted = !comment.voted;
-          return {
-            ...comment,
-            voted,
-            votesCount: Math.max(0, comment.votesCount + (voted ? 1 : -1)),
-          };
-        }),
-      );
-
-      const response = await fetch(
-        `/api/projects/${projectId}/comments/${commentId}/votes`,
-        { method: "POST" },
-      );
-
-      if (!response.ok) {
-        const refresh = await fetch(`/api/projects/${projectId}/comments`, {
-          cache: "no-store",
-        });
-
-        if (refresh.ok) {
-          const data = (await refresh.json()) as CommentResponse;
-          setComments(data.comments);
-        }
-        return;
-      }
-
-      const data = (await response.json()) as { count: number; voted: boolean };
-      setComments((currentComments) =>
-        currentComments.map((comment) =>
-          comment.id === commentId
-            ? { ...comment, votesCount: data.count, voted: data.voted }
-            : comment,
-        ),
-      );
-    });
+    commentVoteMutation.mutate(commentId);
   }
 
   return (
@@ -204,7 +202,7 @@ export function CommentsSection({
             <Textarea
               aria-invalid={Boolean(error)}
               className="min-h-28 bg-background font-mono text-sm leading-6"
-              disabled={pendingComment}
+              disabled={commentMutation.isPending}
               maxLength={maxCommentLength}
               name="body"
               onChange={(event) => setBody(event.target.value)}
@@ -217,10 +215,10 @@ export function CommentsSection({
               </p>
               <Button
                 className="h-11 px-5 text-sm uppercase tracking-[0.18em]"
-                disabled={pendingComment}
+                disabled={commentMutation.isPending}
                 type="submit"
               >
-                {pendingComment ? "Posting..." : "Post comment"}
+                {commentMutation.isPending ? "Posting..." : "Post comment"}
               </Button>
             </div>
             {error ? (
@@ -262,7 +260,7 @@ export function CommentsSection({
                 {signedIn ? (
                   <Button
                     className="h-10 px-4 text-xs uppercase tracking-[0.16em]"
-                    disabled={pendingVote}
+                    disabled={commentVoteMutation.isPending}
                     onClick={() => vote(comment.id)}
                     type="button"
                     variant={comment.voted ? "default" : "outline"}

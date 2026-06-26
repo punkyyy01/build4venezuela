@@ -29,6 +29,23 @@ export type ProjectComment = {
 
 export type ProjectStatus = "draft" | "published" | "hidden";
 
+export function sortProjectsByVotes(projects: Project[]) {
+  return [...projects].sort(
+    (a, b) =>
+      b.votesCount - a.votesCount ||
+      (b.publishedAt ?? b.createdAt).localeCompare(
+        a.publishedAt ?? a.createdAt,
+      ),
+  );
+}
+
+export function sortCommentsByVotes(comments: ProjectComment[]) {
+  return [...comments].sort(
+    (a, b) =>
+      b.votesCount - a.votesCount || a.createdAt.localeCompare(b.createdAt),
+  );
+}
+
 export type ProjectFormState = {
   values: Record<string, string>;
   errors: Record<string, string>;

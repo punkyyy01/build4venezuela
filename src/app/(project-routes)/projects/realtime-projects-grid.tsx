@@ -1,19 +1,31 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { ProjectVideoEmbed } from "@/components/project-video-embed";
 import { createBrowserSupabase } from "@/lib/projects/browser-supabase";
-import type { Project } from "@/lib/projects/schema";
+import { fetchProjects, projectQueryKeys } from "@/lib/projects/queries";
+import { type Project, sortProjectsByVotes } from "@/lib/projects/schema";
 
 type RealtimeProjectsGridProps = {
   initialProjects: Project[];
 };
 
+type ProjectVotePayload = {
+  eventType: "INSERT" | "DELETE" | "UPDATE";
+  new: { project_id?: string } | null;
+  old: { project_id?: string } | null;
+};
+
 export function RealtimeProjectsGrid({
   initialProjects,
 }: RealtimeProjectsGridProps) {
-  const [projects, setProjects] = useState(initialProjects);
-  const [isRefreshing, startTransition] = useTransition();
+  const queryClient = useQueryClient();
+  const { data: projects = [], isFetching } = useQuery({
+    initialData: initialProjects,
+    queryFn: fetchProjects,
+    queryKey: projectQueryKeys.list(),
+  });
 
   useEffect(() => {
     const supabase = createBrowserSupabase();
@@ -22,19 +34,28 @@ export function RealtimeProjectsGrid({
       return;
     }
 
-    let active = true;
+    function updateVoteCount(payload: ProjectVotePayload) {
+      const projectId =
+        payload.new?.project_id ?? payload.old?.project_id ?? null;
 
-    async function refreshProjects() {
-      const response = await fetch("/api/projects", { cache: "no-store" });
-
-      if (!(active && response.ok)) {
+      if (!projectId || payload.eventType === "UPDATE") {
         return;
       }
 
-      const data = (await response.json()) as { projects: Project[] };
-      startTransition(() => {
-        setProjects(data.projects);
-      });
+      const delta = payload.eventType === "INSERT" ? 1 : -1;
+
+      queryClient.setQueryData<Project[]>(projectQueryKeys.list(), (current) =>
+        sortProjectsByVotes(
+          current?.map((project) =>
+            project.id === projectId
+              ? {
+                  ...project,
+                  votesCount: Math.max(0, project.votesCount + delta),
+                }
+              : project,
+          ) ?? [],
+        ),
+      );
     }
 
     const publicationsChannel = supabase
@@ -46,7 +67,8 @@ export function RealtimeProjectsGrid({
           schema: "public",
           table: "project_publication_events",
         },
-        refreshProjects,
+        () =>
+          queryClient.invalidateQueries({ queryKey: projectQueryKeys.list() }),
       )
       .subscribe();
 
@@ -59,16 +81,15 @@ export function RealtimeProjectsGrid({
           schema: "public",
           table: "project_votes",
         },
-        refreshProjects,
+        (payload) => updateVoteCount(payload as ProjectVotePayload),
       )
       .subscribe();
 
     return () => {
-      active = false;
       supabase.removeChannel(publicationsChannel);
       supabase.removeChannel(votesChannel);
     };
-  }, []);
+  }, [queryClient]);
 
   if (projects.length === 0) {
     return (
@@ -84,7 +105,7 @@ export function RealtimeProjectsGrid({
     <div className="relative">
       <div className="mb-3 flex justify-end">
         <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
-          {isRefreshing ? "Syncing live feed..." : "Live feed enabled"}
+          {isFetching ? "Syncing live feed..." : "Live feed enabled"}
         </p>
       </div>
       <div className="grid gap-px bg-border md:grid-cols-2 lg:grid-cols-3">

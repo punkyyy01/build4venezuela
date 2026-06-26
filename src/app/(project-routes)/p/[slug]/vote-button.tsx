@@ -1,15 +1,26 @@
 "use client";
 
 import { SignInButton, useUser } from "@clerk/nextjs";
-import { useEffect, useState, useTransition } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { createBrowserSupabase } from "@/lib/projects/browser-supabase";
+import {
+  fetchProjectVote,
+  projectQueryKeys,
+  toggleProjectVote,
+} from "@/lib/projects/queries";
 
 type VoteButtonProps = {
   projectId: string;
   initialCount: number;
   initialSignedIn: boolean;
   initialVoted: boolean;
+};
+
+type VoteState = {
+  count: number;
+  voted: boolean;
 };
 
 export function VoteButton({
@@ -19,9 +30,48 @@ export function VoteButton({
   initialVoted,
 }: VoteButtonProps) {
   const { isSignedIn } = useUser();
-  const [count, setCount] = useState(initialCount);
-  const [voted, setVoted] = useState(initialVoted);
-  const [pending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
+  const voteQueryKey = projectQueryKeys.votes(projectId);
+  const { data: voteState = { count: initialCount, voted: initialVoted } } =
+    useQuery({
+      initialData: { count: initialCount, voted: initialVoted },
+      queryFn: () => fetchProjectVote(projectId),
+      queryKey: voteQueryKey,
+    });
+  const voteMutation = useMutation({
+    mutationFn: () => toggleProjectVote(projectId),
+    onError: (
+      _error,
+      _variables,
+      context: { previousVote?: VoteState } | undefined,
+    ) => {
+      if (context?.previousVote) {
+        queryClient.setQueryData(voteQueryKey, context.previousVote);
+      }
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: voteQueryKey });
+      const previousVote = queryClient.getQueryData<VoteState>(voteQueryKey);
+
+      queryClient.setQueryData<VoteState>(voteQueryKey, (current) => {
+        const nextVote = !(current ?? voteState).voted;
+
+        return {
+          count: Math.max(
+            0,
+            (current ?? voteState).count + (nextVote ? 1 : -1),
+          ),
+          voted: nextVote,
+        };
+      });
+
+      return { previousVote };
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(voteQueryKey, data);
+      queryClient.invalidateQueries({ queryKey: projectQueryKeys.list() });
+    },
+  });
   const signedIn = isSignedIn ?? initialSignedIn;
 
   useEffect(() => {
@@ -29,20 +79,6 @@ export function VoteButton({
 
     if (!supabase) {
       return;
-    }
-
-    async function refreshVotes() {
-      const response = await fetch(`/api/projects/${projectId}/votes`, {
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        return;
-      }
-
-      const data = (await response.json()) as { count: number; voted: boolean };
-      setCount(data.count);
-      setVoted(data.voted);
     }
 
     const channel = supabase
@@ -55,37 +91,24 @@ export function VoteButton({
           table: "project_votes",
           filter: `project_id=eq.${projectId}`,
         },
-        refreshVotes,
+        () =>
+          queryClient.invalidateQueries({
+            queryKey: projectQueryKeys.votes(projectId),
+          }),
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [projectId]);
+  }, [projectId, queryClient]);
 
   function vote() {
-    const nextVoted = !voted;
-    const nextCount = Math.max(0, count + (nextVoted ? 1 : -1));
+    if (voteMutation.isPending) {
+      return;
+    }
 
-    setVoted(nextVoted);
-    setCount(nextCount);
-
-    startTransition(async () => {
-      const response = await fetch(`/api/projects/${projectId}/votes`, {
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        setVoted(voted);
-        setCount(count);
-        return;
-      }
-
-      const data = (await response.json()) as { count: number; voted: boolean };
-      setCount(data.count);
-      setVoted(data.voted);
-    });
+    voteMutation.mutate();
   }
 
   if (!signedIn) {
@@ -95,7 +118,7 @@ export function VoteButton({
           className="h-12 px-5 text-sm uppercase tracking-[0.18em]"
           type="button"
         >
-          Sign in to vote ({count})
+          Sign in to vote ({voteState.count})
         </Button>
       </SignInButton>
     );
@@ -104,11 +127,13 @@ export function VoteButton({
   return (
     <Button
       className="h-12 px-5 text-sm uppercase tracking-[0.18em]"
-      disabled={pending}
+      aria-disabled={voteMutation.isPending}
       onClick={vote}
       type="button"
     >
-      {pending ? "Saving..." : voted ? `Voted (${count})` : `Vote (${count})`}
+      {voteState.voted
+        ? `Voted (${voteState.count})`
+        : `Vote (${voteState.count})`}
     </Button>
   );
 }

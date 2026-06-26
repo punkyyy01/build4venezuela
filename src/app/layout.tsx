@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { QueryProvider } from "./query-provider";
 
 const inputMonoNarrow = localFont({
   src: [
@@ -75,7 +76,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${inputMonoNarrow.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background text-foreground">
-        <ClerkProvider appearance={{ theme: shadcn }}>{children}</ClerkProvider>
+        <ClerkProvider appearance={{ theme: shadcn }}>
+          <QueryProvider>{children}</QueryProvider>
+        </ClerkProvider>
       </body>
     </html>
   );
