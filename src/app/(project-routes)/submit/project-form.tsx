@@ -1,20 +1,45 @@
 "use client";
 
-import { useActionState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import type { ChangeEvent, FormEvent } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  ProjectFormError,
+  projectQueryKeys,
+  saveProject,
+} from "@/lib/projects/queries";
 import type { ProjectFormState } from "@/lib/projects/schema";
 
 type ProjectFormProps = {
-  action: (
-    state: ProjectFormState,
-    formData: FormData,
-  ) => Promise<ProjectFormState>;
   initialState: ProjectFormState;
   projectId?: string;
   submitLabel: string;
 };
+
+const projectFormFields = [
+  "slug",
+  "name",
+  "projectUrl",
+  "countries",
+  "participantName",
+  "videoUrl",
+  "descriptionMarkdown",
+] as const;
+
+type ProjectFormField = (typeof projectFormFields)[number];
+type ProjectFormValues = Record<ProjectFormField, string>;
+
+function projectFormValuesFromState(
+  values: ProjectFormState["values"],
+): ProjectFormValues {
+  return Object.fromEntries(
+    projectFormFields.map((field) => [field, values[field] ?? ""]),
+  ) as ProjectFormValues;
+}
 
 function FieldError({ message }: { message?: string }) {
   if (!message) {
@@ -29,23 +54,61 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export function ProjectForm({
-  action,
   initialState,
   projectId,
   submitLabel,
 }: ProjectFormProps) {
-  const [state, formAction, pending] = useActionState(action, initialState);
-  const values = state.values;
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [values, setValues] = useState(() =>
+    projectFormValuesFromState(initialState.values),
+  );
+  const [errors, setErrors] = useState(initialState.errors);
+  const projectMutation = useMutation({
+    mutationFn: saveProject,
+    onError: (error: Error) => {
+      if (error instanceof ProjectFormError) {
+        setValues(projectFormValuesFromState(error.values));
+        setErrors(error.errors);
+        return;
+      }
+
+      setErrors({ form: error.message });
+    },
+    onSuccess: (project) => {
+      queryClient.invalidateQueries({ queryKey: projectQueryKeys.list() });
+      router.push(`/p/${project.slug}`);
+    },
+  });
+
+  function handleValueChange(field: ProjectFormField) {
+    return (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setValues((currentValues) => ({
+        ...currentValues,
+        [field]: event.target.value,
+      }));
+      setErrors((currentErrors) => {
+        const {
+          [field]: _fieldError,
+          form: _formError,
+          ...nextErrors
+        } = currentErrors;
+        return nextErrors;
+      });
+    };
+  }
+
+  function submitProject(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrors({});
+    projectMutation.mutate({ projectId, values });
+  }
 
   return (
-    <form action={formAction} className="grid gap-6">
-      {projectId ? (
-        <input type="hidden" name="projectId" value={projectId} />
-      ) : null}
-
-      {state.errors.form ? (
+    <form className="grid gap-6" onSubmit={submitProject}>
+      {errors.form ? (
         <div className="border border-destructive bg-destructive/10 p-4 font-mono text-sm uppercase tracking-[0.12em] text-destructive">
-          {state.errors.form}
+          {errors.form}
         </div>
       ) : null}
 
@@ -56,11 +119,12 @@ export function ProjectForm({
         <Input
           id="project-slug"
           name="slug"
-          defaultValue={values.slug}
+          onChange={handleValueChange("slug")}
           placeholder="cool-slug"
           required
+          value={values.slug}
         />
-        <FieldError message={state.errors.slug} />
+        <FieldError message={errors.slug} />
       </label>
 
       <label className="grid gap-2" htmlFor="project-name">
@@ -70,10 +134,11 @@ export function ProjectForm({
         <Input
           id="project-name"
           name="name"
-          defaultValue={values.name}
+          onChange={handleValueChange("name")}
           required
+          value={values.name}
         />
-        <FieldError message={state.errors.name} />
+        <FieldError message={errors.name} />
       </label>
 
       <label className="grid gap-2" htmlFor="project-url">
@@ -83,12 +148,13 @@ export function ProjectForm({
         <Input
           id="project-url"
           name="projectUrl"
-          defaultValue={values.projectUrl}
+          onChange={handleValueChange("projectUrl")}
           placeholder="https://..."
           required
           type="url"
+          value={values.projectUrl}
         />
-        <FieldError message={state.errors.projectUrl} />
+        <FieldError message={errors.projectUrl} />
       </label>
 
       <label className="grid gap-2" htmlFor="project-countries">
@@ -98,11 +164,12 @@ export function ProjectForm({
         <Input
           id="project-countries"
           name="countries"
-          defaultValue={values.countries}
+          onChange={handleValueChange("countries")}
           placeholder="Venezuela, Colombia, United States"
           required
+          value={values.countries}
         />
-        <FieldError message={state.errors.countries} />
+        <FieldError message={errors.countries} />
       </label>
 
       <label className="grid gap-2" htmlFor="project-participant-name">
@@ -112,10 +179,11 @@ export function ProjectForm({
         <Input
           id="project-participant-name"
           name="participantName"
-          defaultValue={values.participantName}
+          onChange={handleValueChange("participantName")}
           required
+          value={values.participantName}
         />
-        <FieldError message={state.errors.participantName} />
+        <FieldError message={errors.participantName} />
       </label>
 
       <label className="grid gap-2" htmlFor="project-video-url">
@@ -125,12 +193,13 @@ export function ProjectForm({
         <Input
           id="project-video-url"
           name="videoUrl"
-          defaultValue={values.videoUrl}
+          onChange={handleValueChange("videoUrl")}
           placeholder="https://youtu.be/..."
           required
           type="url"
+          value={values.videoUrl}
         />
-        <FieldError message={state.errors.videoUrl} />
+        <FieldError message={errors.videoUrl} />
       </label>
 
       <label className="grid gap-2" htmlFor="project-description">
@@ -141,21 +210,22 @@ export function ProjectForm({
           className="min-h-64 text-sm leading-6"
           id="project-description"
           name="descriptionMarkdown"
-          defaultValue={values.descriptionMarkdown}
+          onChange={handleValueChange("descriptionMarkdown")}
           placeholder={
             "## What did you build?\n\nWho is it for? How does it help? What should people try first?"
           }
           required
+          value={values.descriptionMarkdown}
         />
-        <FieldError message={state.errors.descriptionMarkdown} />
+        <FieldError message={errors.descriptionMarkdown} />
       </label>
 
       <Button
         className="h-12 text-sm uppercase tracking-[0.18em]"
-        disabled={pending}
+        disabled={projectMutation.isPending}
         type="submit"
       >
-        {pending ? "Checking..." : submitLabel}
+        {projectMutation.isPending ? "Checking..." : submitLabel}
       </Button>
     </form>
   );

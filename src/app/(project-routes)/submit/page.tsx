@@ -1,4 +1,3 @@
-import { createProjectAction } from "@/lib/projects/actions";
 import { emptyProjectFormState } from "@/lib/projects/schema";
 import { ProjectShell } from "../project-shell";
 import { ProjectForm } from "./project-form";
@@ -22,7 +21,6 @@ export default function SubmitProjectPage() {
           </div>
           <div className="border border-border bg-card p-5 sm:p-7">
             <ProjectForm
-              action={createProjectAction}
               initialState={emptyProjectFormState}
               submitLabel="Submit project"
             />

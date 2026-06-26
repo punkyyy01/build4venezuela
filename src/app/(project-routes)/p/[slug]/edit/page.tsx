@@ -1,6 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
-import { updateProjectAction } from "@/lib/projects/actions";
 import { projectToFormValues } from "@/lib/projects/schema";
 import { canEditProject, getProjectBySlug } from "@/lib/projects/store";
 import { ProjectShell } from "../../../project-shell";
@@ -42,7 +41,6 @@ export default async function EditProjectPage({ params }: Props) {
           </div>
           <div className="border border-border bg-card p-5 sm:p-7">
             <ProjectForm
-              action={updateProjectAction}
               initialState={{
                 values: projectToFormValues(project),
                 errors: {},

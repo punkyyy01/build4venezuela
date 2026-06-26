@@ -1,4 +1,8 @@
-import type { Project, ProjectComment } from "@/lib/projects/schema";
+import type {
+  Project,
+  ProjectComment,
+  ProjectFormState,
+} from "@/lib/projects/schema";
 
 export const projectQueryKeys = {
   all: ["projects"] as const,
@@ -19,6 +23,30 @@ type CommentErrorResponse = {
   error?: string;
   errors?: Record<string, string>;
 };
+
+export type ProjectFormValues = ProjectFormState["values"];
+
+type ProjectFormErrorResponse = {
+  values?: ProjectFormValues;
+  errors?: Record<string, string>;
+};
+
+export type ProjectMutationInput = {
+  projectId?: string;
+  values: ProjectFormValues;
+};
+
+export class ProjectFormError extends Error {
+  values: ProjectFormValues;
+  errors: Record<string, string>;
+
+  constructor(response: ProjectFormErrorResponse, fallback: string) {
+    super(response.errors?.form ?? fallback);
+    this.name = "ProjectFormError";
+    this.values = response.values ?? {};
+    this.errors = response.errors ?? { form: fallback };
+  }
+}
 
 async function parseJson<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
@@ -109,4 +137,25 @@ export async function toggleProjectCommentVote(
   }
 
   return parseJson<ProjectVote>(response);
+}
+
+export async function saveProject({ projectId, values }: ProjectMutationInput) {
+  const response = await fetch(
+    projectId ? `/api/projects/${projectId}` : "/api/projects",
+    {
+      body: JSON.stringify(values),
+      headers: { "Content-Type": "application/json" },
+      method: projectId ? "PATCH" : "POST",
+    },
+  );
+
+  if (!response.ok) {
+    throw new ProjectFormError(
+      await parseJson<ProjectFormErrorResponse>(response),
+      "Could not save project.",
+    );
+  }
+
+  const data = await parseJson<{ project: Project }>(response);
+  return data.project;
 }
