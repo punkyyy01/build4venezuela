@@ -33,6 +33,9 @@ const colors = [
 
 const emojis = ["❤️", "🙏", "🔥", "✨", "🇻🇪", "💛", "💙", "💪"];
 
+const CURSOR_THROTTLE_MS = 55;
+const INACTIVE_TIMEOUT_MS = 60_000;
+
 type VisitorProfile = {
   visitorId: string;
   tabId: string;
@@ -135,71 +138,114 @@ export function RealtimeVisitors({ visitorId }: { visitorId: string }) {
       return;
     }
 
-    const channel = supabase
-      .channel("home-visitors", {
-        config: {
-          broadcast: { self: false },
-          presence: { key: profile.visitorId },
-        },
-      })
-      .on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState<CursorPresence>();
-        const nextCursors = Object.values(state)
-          .flat()
-          .filter((cursor) => cursor.tabId !== profile.tabId)
-          .sort((left, right) => right.updatedAt - left.updatedAt);
+    const realtime = supabase;
 
-        setCursors(nextCursors);
-      })
-      .on<CursorPayload>("broadcast", { event: "cursor" }, ({ payload }) => {
-        if (payload.tabId === profile.tabId) {
-          return;
-        }
+    let channel: ReturnType<typeof realtime.channel> | null = null;
+    let inactiveTimer: number | null = null;
 
-        setCursors((current) => {
-          const withoutCursor = current.filter(
-            (cursor) => cursor.tabId !== payload.tabId,
-          );
+    function disconnect() {
+      if (inactiveTimer) {
+        window.clearTimeout(inactiveTimer);
+        inactiveTimer = null;
+      }
 
-          return [payload, ...withoutCursor].sort(
-            (left, right) => right.updatedAt - left.updatedAt,
-          );
+      if (!channel) {
+        return;
+      }
+
+      const currentChannel = channel;
+      channel = null;
+      setLocalCursor(null);
+      setCursors([]);
+      void currentChannel.untrack();
+      void realtime.removeChannel(currentChannel);
+    }
+
+    function scheduleDisconnect() {
+      if (inactiveTimer) {
+        window.clearTimeout(inactiveTimer);
+      }
+
+      inactiveTimer = window.setTimeout(disconnect, INACTIVE_TIMEOUT_MS);
+    }
+
+    function connect() {
+      if (channel) {
+        scheduleDisconnect();
+        return channel;
+      }
+
+      const nextChannel = realtime
+        .channel("home-visitors", {
+          config: {
+            broadcast: { self: false },
+            presence: { key: profile.visitorId },
+          },
+        })
+        .on("presence", { event: "sync" }, () => {
+          const state = nextChannel.presenceState<CursorPresence>();
+          const nextCursors = Object.values(state)
+            .flat()
+            .filter((cursor) => cursor.tabId !== profile.tabId)
+            .sort((left, right) => right.updatedAt - left.updatedAt);
+
+          setCursors(nextCursors);
+        })
+        .on<CursorPayload>("broadcast", { event: "cursor" }, ({ payload }) => {
+          if (payload.tabId === profile.tabId) {
+            return;
+          }
+
+          setCursors((current) => {
+            const withoutCursor = current.filter(
+              (cursor) => cursor.tabId !== payload.tabId,
+            );
+
+            return [payload, ...withoutCursor].sort(
+              (left, right) => right.updatedAt - left.updatedAt,
+            );
+          });
+        })
+        .on<ReactionPayload>("broadcast", { event: "emoji" }, ({ payload }) => {
+          if (payload.tabId === profile.tabId) {
+            return;
+          }
+
+          const reaction = { ...payload, createdAt: Date.now() };
+          setReactions((current) => [...current.slice(-18), reaction]);
+          window.setTimeout(() => {
+            setReactions((current) =>
+              current.filter((item) => item.id !== reaction.id),
+            );
+          }, 1300);
+        })
+        .subscribe((status) => {
+          if (status !== "SUBSCRIBED" || channel !== nextChannel) {
+            return;
+          }
+
+          void nextChannel.track({
+            ...profile,
+            x: 0.5,
+            y: 0.5,
+            updatedAt: Date.now(),
+          });
         });
-      })
-      .on<ReactionPayload>("broadcast", { event: "emoji" }, ({ payload }) => {
-        if (payload.tabId === profile.tabId) {
-          return;
-        }
 
-        const reaction = { ...payload, createdAt: Date.now() };
-        setReactions((current) => [...current.slice(-18), reaction]);
-        window.setTimeout(() => {
-          setReactions((current) =>
-            current.filter((item) => item.id !== reaction.id),
-          );
-        }, 1300);
-      })
-      .subscribe((status) => {
-        if (status !== "SUBSCRIBED") {
-          return;
-        }
-
-        void channel.track({
-          ...profile,
-          x: 0.5,
-          y: 0.5,
-          updatedAt: Date.now(),
-        });
-      });
+      channel = nextChannel;
+      scheduleDisconnect();
+      return nextChannel;
+    }
 
     function trackPointer(event: PointerEvent) {
       const now = Date.now();
 
-      if (now - lastCursorRef.current < 55) {
+      if (now - lastCursorRef.current < CURSOR_THROTTLE_MS) {
         return;
       }
 
       lastCursorRef.current = now;
+      const activeChannel = connect();
       const cursor = {
         ...profile,
         x: Math.min(1, Math.max(0, event.clientX / window.innerWidth)),
@@ -209,7 +255,7 @@ export function RealtimeVisitors({ visitorId }: { visitorId: string }) {
 
       setLocalCursor(cursor);
 
-      void channel.send({
+      void activeChannel.send({
         type: "broadcast",
         event: "cursor",
         payload: cursor,
@@ -217,6 +263,7 @@ export function RealtimeVisitors({ visitorId }: { visitorId: string }) {
     }
 
     function sendReaction(event: PointerEvent) {
+      const activeChannel = connect();
       const reaction: Reaction = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         tabId: profile.tabId,
@@ -241,7 +288,7 @@ export function RealtimeVisitors({ visitorId }: { visitorId: string }) {
         );
       }, 1300);
 
-      void channel.send({
+      void activeChannel.send({
         type: "broadcast",
         event: "emoji",
         payload: reaction,
@@ -249,19 +296,39 @@ export function RealtimeVisitors({ visitorId }: { visitorId: string }) {
     }
 
     function syncScrollPosition() {
+      connect();
       setScrollVersion((version) => version + 1);
     }
 
+    function syncActivity() {
+      connect();
+    }
+
+    function syncVisibility() {
+      if (document.hidden) {
+        disconnect();
+        return;
+      }
+
+      connect();
+    }
+
+    connect();
     window.addEventListener("pointermove", trackPointer, { passive: true });
     window.addEventListener("pointerdown", sendReaction, { passive: true });
     window.addEventListener("scroll", syncScrollPosition, { passive: true });
+    window.addEventListener("keydown", syncActivity);
+    window.addEventListener("focus", syncActivity);
+    document.addEventListener("visibilitychange", syncVisibility);
 
     return () => {
       window.removeEventListener("pointermove", trackPointer);
       window.removeEventListener("pointerdown", sendReaction);
       window.removeEventListener("scroll", syncScrollPosition);
-      void channel.untrack();
-      supabase.removeChannel(channel);
+      window.removeEventListener("keydown", syncActivity);
+      window.removeEventListener("focus", syncActivity);
+      document.removeEventListener("visibilitychange", syncVisibility);
+      disconnect();
     };
   }, [profile]);
 
