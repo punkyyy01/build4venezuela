@@ -1,7 +1,10 @@
+import { createHash } from "node:crypto";
+import { headers } from "next/headers";
 import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { RealtimeVisitors } from "./realtime-visitors";
 
 const assetPath = "/BFV/assets/";
 
@@ -33,10 +36,26 @@ function VMark({ className }: { className: string }) {
   );
 }
 
+async function getVisitorId() {
+  const headersList = await headers();
+  const fingerprint = [
+    headersList.get("x-forwarded-for")?.split(",")[0]?.trim(),
+    headersList.get("x-real-ip"),
+    headersList.get("cf-connecting-ip"),
+    headersList.get("user-agent"),
+    headersList.get("accept-language"),
+  ]
+    .filter(Boolean)
+    .join("|");
+
+  return createHash("sha256").update(fingerprint).digest("hex").slice(0, 24);
+}
+
 export default async function Home({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
+  const visitorId = await getVisitorId();
   const t = await getTranslations("HomePage");
   const projectIdeas = t.raw("projectIdeas") as string[];
   const channels = t.raw("channels") as Channel[];
@@ -47,6 +66,7 @@ export default async function Home({ params }: Props) {
 
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
+      <RealtimeVisitors visitorId={visitorId} />
       <SiteHeader />
 
       <section className="relative isolate flex min-h-screen items-center justify-center px-4 pt-20 pb-4 sm:px-8 lg:px-10">
