@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
@@ -79,6 +80,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ClerkProvider appearance={{ theme: shadcn }}>
           <QueryProvider>{children}</QueryProvider>
         </ClerkProvider>
+        <Analytics />
       </body>
     </html>
   );
