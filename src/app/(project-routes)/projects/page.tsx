@@ -1,6 +1,7 @@
 import { listProjects } from "@/lib/projects/store";
 import { ProjectShell } from "../project-shell";
 import { RealtimeProjectsGrid } from "./realtime-projects-grid";
+import { SubmitProjectCta } from "./submit-project-cta";
 
 export default async function ProjectsPage() {
   const projects = await listProjects();
@@ -18,12 +19,7 @@ export default async function ProjectsPage() {
                 Shipped work
               </h1>
             </div>
-            <a
-              className="inline-flex border border-primary bg-primary px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground transition hover:bg-primary/80"
-              href="/submit"
-            >
-              Submit yours
-            </a>
+            <SubmitProjectCta />
           </div>
 
           <RealtimeProjectsGrid initialProjects={projects} />

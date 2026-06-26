@@ -51,6 +51,11 @@ export function SiteHeader() {
         <div className="flex items-center gap-2 sm:gap-3">
           <nav aria-label="Main navigation">
             <div className="flex items-center gap-2">
+              <Show when="signed-in">
+                <div className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:slide-in-from-right-1 duration-300">
+                  <UserButton />
+                </div>
+              </Show>
               <a
                 className="inline-flex border border-border px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.16em] text-foreground transition hover:border-foreground hover:bg-foreground hover:text-background focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-background sm:px-4"
                 href="/projects"
@@ -69,9 +74,6 @@ export function SiteHeader() {
                   Enter
                 </button>
               </SignInButton>
-            </Show>
-            <Show when="signed-in">
-              <UserButton />
             </Show>
           </div>
           <LanguageSelector />
