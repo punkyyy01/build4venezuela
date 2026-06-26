@@ -24,7 +24,7 @@ export function LanguageSelector() {
       <DropdownMenuTrigger
         render={
           <Button
-            className="border-white/35 bg-white text-black hover:bg-[#fcd43d] hover:text-black aria-expanded:bg-[#fcd43d] aria-expanded:text-black"
+            className="border-border bg-foreground text-background hover:bg-primary hover:text-primary-foreground aria-expanded:bg-primary aria-expanded:text-primary-foreground"
             variant="outline"
             size="sm"
           />
@@ -36,15 +36,15 @@ export function LanguageSelector() {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="min-w-36 border-white/20 bg-black text-white ring-white/20"
+        className="min-w-36 border-border bg-popover text-popover-foreground ring-border"
       >
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="text-white/55">
+          <DropdownMenuLabel className="text-muted-foreground">
             {t("label")}
           </DropdownMenuLabel>
           {routing.locales.map((option) => (
             <DropdownMenuItem
-              className="justify-between focus:bg-white focus:text-black"
+              className="justify-between focus:bg-foreground focus:text-background"
               key={option}
               render={<Link href={pathname} locale={option} />}
             >

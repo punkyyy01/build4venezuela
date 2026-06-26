@@ -170,25 +170,25 @@ export default async function BrandPage({ params }: Props) {
   const t = await getTranslations("BrandPage");
 
   return (
-    <main className="min-h-screen overflow-hidden bg-black text-white">
+    <main className="min-h-screen overflow-hidden bg-background text-foreground">
       <SiteHeader />
 
       <section className="relative isolate px-5 pt-28 pb-16 sm:px-8 sm:pt-32 sm:pb-20 lg:px-10">
-        <div className="absolute inset-0 -z-20 bg-black" />
-        <div className="absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,.22)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.22)_1px,transparent_1px)] [background-size:48px_48px]" />
+        <div className="absolute inset-0 -z-20 bg-background" />
+        <div className="bg-grid absolute inset-0 -z-10 opacity-[0.06]" />
 
         <div className="mx-auto max-w-6xl">
-          <p className="font-mono text-sm uppercase tracking-[0.28em] text-[#fcd43d]">
+          <p className="font-mono text-sm uppercase tracking-[0.28em] text-primary">
             {t("eyebrow")}
           </p>
           <div className="mt-5 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <h1 className="text-balance font-mono text-[clamp(3rem,8vw,8rem)] font-black uppercase leading-[0.84] tracking-[-0.07em]">
               {t("title")}
             </h1>
-            <div className="space-y-5 font-mono text-[clamp(1rem,1.7vw,1.35rem)] font-light leading-relaxed tracking-[0.07em] text-white/75">
+            <div className="flex flex-col gap-5 font-mono text-[clamp(1rem,1.7vw,1.35rem)] font-light leading-relaxed tracking-[0.07em] text-foreground/75">
               <p>{t("description")}</p>
               <a
-                className="inline-flex border border-[#6fcaef]/60 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-[#6fcaef] transition hover:border-white hover:bg-white hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6fcaef] focus-visible:ring-offset-4 focus-visible:ring-offset-black"
+                className="inline-flex border border-accent/60 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-accent transition hover:border-foreground hover:bg-foreground hover:text-background focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-background"
                 href="#social"
               >
                 {t("cta")}
@@ -204,10 +204,13 @@ export default async function BrandPage({ params }: Props) {
             eyebrow={t("assets.eyebrow")}
             title={t("assets.title")}
           />
-          <div className="grid gap-px bg-white/12 md:grid-cols-3">
+          <div className="grid gap-px bg-border md:grid-cols-3">
             {brandAssets.map((asset) => (
-              <article className="bg-black p-6 sm:p-7" key={asset.key}>
-                <div className="flex h-48 items-center justify-center border border-white/12 bg-black p-8">
+              <article
+                className="border border-border bg-background p-6 sm:p-7"
+                key={asset.key}
+              >
+                <div className="flex h-48 items-center justify-center border border-border bg-background p-8">
                   <Image
                     alt={t(`assets.items.${asset.key}.title`)}
                     className={`max-h-full w-auto max-w-full select-none object-contain ${asset.previewClassName ?? ""}`}
@@ -220,7 +223,7 @@ export default async function BrandPage({ params }: Props) {
                 <h2 className="mt-6 font-mono text-2xl font-black uppercase tracking-[-0.02em]">
                   {t(`assets.items.${asset.key}.title`)}
                 </h2>
-                <p className="mt-3 font-mono text-sm uppercase leading-6 tracking-[0.12em] text-white/55">
+                <p className="mt-3 font-mono text-sm uppercase leading-6 tracking-[0.12em] text-muted-foreground">
                   {t(`assets.items.${asset.key}.description`)}
                 </p>
                 <DownloadOptions downloads={asset.downloads} t={t} />
@@ -230,26 +233,29 @@ export default async function BrandPage({ params }: Props) {
         </div>
       </section>
 
-      <section className="border-white/10 border-y bg-white px-5 py-16 text-black sm:px-8 sm:py-20 lg:px-10">
+      <section className="border-border border-y bg-foreground px-5 py-16 text-background sm:px-8 sm:py-20 lg:px-10">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow={t("fonts.eyebrow")}
             title={t("fonts.title")}
           />
-          <div className="grid gap-px bg-black/12 md:grid-cols-5">
+          <div className="grid gap-px bg-background/15 md:grid-cols-5">
             {fonts.map((font) => (
-              <article className="bg-white p-5 font-mono" key={font.fileName}>
-                <p className="text-xs uppercase tracking-[0.22em] text-black/45">
+              <article
+                className="bg-foreground p-5 font-mono"
+                key={font.fileName}
+              >
+                <p className="text-xs uppercase tracking-[0.22em] text-background/45">
                   {font.weight}
                 </p>
                 <p className="mt-5 text-[clamp(2.2rem,5vw,4rem)] font-black leading-none tracking-[-0.08em]">
                   Aa
                 </p>
-                <p className="mt-4 break-all text-xs uppercase leading-5 tracking-[0.12em] text-black/55">
+                <p className="mt-4 break-all text-xs uppercase leading-5 tracking-[0.12em] text-background/55">
                   {font.fileName}
                 </p>
                 <a
-                  className="mt-6 inline-flex border border-black/20 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-black transition hover:border-black hover:bg-black hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-4 focus-visible:ring-offset-white"
+                  className="mt-6 inline-flex border border-background/20 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-background transition hover:border-background hover:bg-background hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-background focus-visible:ring-offset-4 focus-visible:ring-offset-foreground"
                   download
                   href={font.href}
                 >
@@ -258,7 +264,7 @@ export default async function BrandPage({ params }: Props) {
               </article>
             ))}
           </div>
-          <p className="mt-6 max-w-3xl font-mono text-sm uppercase leading-6 tracking-[0.16em] text-black/55">
+          <p className="mt-6 max-w-3xl font-mono text-sm uppercase leading-6 tracking-[0.16em] text-background/55">
             {t("fonts.note")}
           </p>
         </div>
@@ -266,12 +272,12 @@ export default async function BrandPage({ params }: Props) {
 
       <section className="px-5 py-20 sm:px-8 sm:py-24 lg:px-10" id="social">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-10 grid gap-5 border-white/15 border-b pb-8 lg:grid-cols-[1fr_0.9fr] lg:items-end">
+          <div className="mb-10 grid gap-5 border-border border-b pb-8 lg:grid-cols-[1fr_0.9fr] lg:items-end">
             <SectionHeader
               eyebrow={t("social.eyebrow")}
               title={t("social.title")}
             />
-            <p className="font-mono text-sm uppercase leading-6 tracking-[0.16em] text-white/55">
+            <p className="font-mono text-sm uppercase leading-6 tracking-[0.16em] text-muted-foreground">
               {t("social.description")}
             </p>
           </div>
@@ -279,27 +285,31 @@ export default async function BrandPage({ params }: Props) {
           <div className="grid gap-6 md:grid-cols-3">
             {socialAssets.map((asset) => (
               <article
-                className="border border-white/12 bg-white/[0.03] p-4"
+                className="flex h-full flex-col border border-border bg-card p-4"
                 key={asset.key}
               >
-                <div className="overflow-hidden bg-white/5">
+                <div className="flex h-72 items-center justify-center overflow-hidden bg-muted">
                   <Image
                     alt={t(`social.items.${asset.key}.title`)}
-                    className="h-auto w-full select-none"
+                    className="max-h-full w-auto max-w-full select-none object-contain"
                     draggable="false"
                     height={asset.height}
                     src={asset.downloads[0].href}
                     width={asset.width}
                   />
                 </div>
-                <div className="p-2 pt-5 font-mono">
+                <div className="flex flex-1 flex-col p-2 pt-5 font-mono">
                   <p className="text-xl font-black uppercase tracking-[-0.02em]">
                     {t(`social.items.${asset.key}.title`)}
                   </p>
-                  <p className="mt-2 text-sm uppercase leading-6 tracking-[0.12em] text-white/55">
+                  <p className="mt-2 text-sm uppercase leading-6 tracking-[0.12em] text-muted-foreground">
                     {t(`social.items.${asset.key}.description`)}
                   </p>
-                  <DownloadOptions downloads={asset.downloads} t={t} />
+                  <DownloadOptions
+                    className="mt-auto pt-6"
+                    downloads={asset.downloads}
+                    t={t}
+                  />
                 </div>
               </article>
             ))}
@@ -315,7 +325,7 @@ export default async function BrandPage({ params }: Props) {
 function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div className="mb-10">
-      <p className="font-mono text-sm uppercase tracking-[0.28em] text-[#ef3b56]">
+      <p className="font-mono text-sm uppercase tracking-[0.28em] text-destructive">
         {eyebrow}
       </p>
       <h2 className="mt-4 font-mono text-[clamp(2.2rem,5vw,5rem)] font-black uppercase leading-[0.88] tracking-[-0.06em]">
@@ -326,17 +336,19 @@ function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
 }
 
 function DownloadOptions({
+  className = "mt-6",
   downloads,
   t,
 }: {
+  className?: string;
   downloads: DownloadOption[];
   t: Awaited<ReturnType<typeof getTranslations>>;
 }) {
   return (
-    <div className="mt-6 flex flex-wrap gap-2">
+    <div className={`${className} flex flex-wrap gap-2`}>
       {downloads.map((download) => (
         <a
-          className="inline-flex border border-white/25 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:border-white hover:bg-white hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-black"
+          className="inline-flex border border-border px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.16em] text-foreground transition hover:border-foreground hover:bg-foreground hover:text-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
           download
           href={download.href}
           key={download.fileName}

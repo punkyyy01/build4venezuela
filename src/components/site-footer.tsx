@@ -17,16 +17,16 @@ export async function SiteFooter() {
   const partners = t.raw("partners") as Partner[];
 
   return (
-    <footer className="bg-black px-5 py-14 text-white sm:px-8 lg:px-10">
-      <div className="mx-auto flex max-w-6xl flex-col-reverse gap-10 border-white/15 border-t pt-12 md:flex-row md:items-center md:justify-between">
-        <p className="max-w-md font-mono text-xs uppercase leading-6 tracking-[0.2em] text-white/45">
+    <footer className="bg-background px-5 py-14 text-foreground sm:px-8 lg:px-10">
+      <div className="mx-auto flex max-w-6xl flex-col-reverse gap-10 border-border border-t pt-12 md:flex-row md:items-center md:justify-between">
+        <p className="max-w-md font-mono text-xs uppercase leading-6 tracking-[0.2em] text-muted-foreground">
           {t("footer.description")}
         </p>
 
         <div className="grid w-full max-w-[340px] grid-cols-3 items-center gap-3 sm:max-w-[560px] sm:gap-10 md:w-auto">
           {partners.map((partner) => (
             <a
-              className="transition hover:opacity-75 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-black"
+              className="transition hover:opacity-75 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
               href={partner.href}
               key={partner.name}
               rel="noreferrer"
