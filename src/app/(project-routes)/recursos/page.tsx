@@ -50,10 +50,10 @@ export default function RecursosPage() {
             </h1>
           </div>
 
-          <div className="grid gap-px bg-border md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid border-border border-t border-l bg-background md:grid-cols-2 lg:grid-cols-3">
             {resources.map((resource) => (
               <a
-                className="group flex flex-col bg-background p-6 transition hover:bg-card sm:p-7"
+                className="group flex flex-col border-border border-r border-b bg-background p-6 transition hover:bg-card sm:p-7"
                 href={resource.href}
                 key={resource.href}
                 rel="noopener noreferrer"
