@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { AuthorBadge } from "@/components/author-badge";
 import { ProjectMarkdown } from "@/components/project-markdown";
 import { ProjectVideoEmbed } from "@/components/project-video-embed";
 import {
@@ -63,9 +64,14 @@ export default async function ProjectPage({ params }: Props) {
                 <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
                   {t("builtBy")}
                 </p>
-                <p className="mt-2 font-mono text-lg uppercase tracking-[0.08em]">
-                  {project.participantName}
-                </p>
+                <AuthorBadge
+                  className="mt-3"
+                  imageClassName="size-12"
+                  imageUrl={project.ownerImageUrl}
+                  meta={project.participantName}
+                  name={project.ownerName || project.participantName}
+                  nameClassName="text-lg tracking-[0.08em]"
+                />
               </div>
               <div className="bg-background p-4">
                 <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">

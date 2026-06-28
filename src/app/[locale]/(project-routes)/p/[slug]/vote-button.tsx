@@ -11,6 +11,7 @@ import {
   projectQueryKeys,
   toggleProjectVote,
 } from "@/lib/projects/queries";
+import { type Project, sortProjectsByVotes } from "@/lib/projects/schema";
 
 type VoteButtonProps = {
   projectId: string;
@@ -48,28 +49,65 @@ export function VoteButton({
     onError: (
       _error,
       _variables,
-      context: { previousVote?: VoteState } | undefined,
+      context:
+        | { previousProjects?: Project[]; previousVote?: VoteState }
+        | undefined,
     ) => {
       if (context?.previousVote) {
         queryClient.setQueryData(voteQueryKey, context.previousVote);
       }
+      if (context?.previousProjects) {
+        queryClient.setQueryData(
+          projectQueryKeys.list(),
+          context.previousProjects,
+        );
+      }
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: voteQueryKey });
+      await queryClient.cancelQueries({ queryKey: projectQueryKeys.list() });
       const previousVote = queryClient.getQueryData<VoteState>(voteQueryKey);
+      const previousProjects = queryClient.getQueryData<Project[]>(
+        projectQueryKeys.list(),
+      );
       const currentVote = previousVote ?? voteState;
       const nextVote = !currentVote.voted;
+      const delta = nextVote ? 1 : -1;
 
       queryClient.setQueryData<VoteState>(voteQueryKey, {
-        count: Math.max(0, currentVote.count + (nextVote ? 1 : -1)),
+        count: Math.max(0, currentVote.count + delta),
         voted: nextVote,
       });
+      queryClient.setQueryData<Project[]>(projectQueryKeys.list(), (current) =>
+        current
+          ? sortProjectsByVotes(
+              current.map((project) =>
+                project.id === projectId
+                  ? {
+                      ...project,
+                      votesCount: Math.max(0, project.votesCount + delta),
+                    }
+                  : project,
+              ),
+            )
+          : current,
+      );
 
-      return { previousVote };
+      return { previousProjects, previousVote };
     },
     onSuccess: (data) => {
       queryClient.setQueryData(voteQueryKey, data);
-      queryClient.invalidateQueries({ queryKey: projectQueryKeys.list() });
+      queryClient.setQueryData<Project[]>(projectQueryKeys.list(), (current) =>
+        current
+          ? sortProjectsByVotes(
+              current.map((project) =>
+                project.id === projectId
+                  ? { ...project, votesCount: data.count }
+                  : project,
+              ),
+            )
+          : current,
+      );
     },
   });
   const signedIn = isSignedIn ?? initialSignedIn;

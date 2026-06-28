@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { routing } from "@/i18n/routing";
@@ -10,6 +10,15 @@ import {
 } from "@/lib/projects/api-security";
 import { createProject, listProjects } from "@/lib/projects/store";
 import { validateProjectSubmission } from "@/lib/projects/submissions";
+
+function displayName(user: Awaited<ReturnType<typeof currentUser>>) {
+  return (
+    user?.fullName ||
+    user?.primaryEmailAddress?.emailAddress ||
+    user?.username ||
+    "Community member"
+  );
+}
 
 export async function GET() {
   return NextResponse.json({ projects: await listProjects() });
@@ -51,9 +60,12 @@ export async function POST(request: Request) {
     );
   }
 
+  const user = await currentUser();
   const project = await createProject({
     ...result.data,
     ownerUserId: userId,
+    ownerName: displayName(user),
+    ownerImageUrl: user?.imageUrl ?? "",
     spamScore: result.spam.confidence,
     spamReason: result.spam.reason,
   });

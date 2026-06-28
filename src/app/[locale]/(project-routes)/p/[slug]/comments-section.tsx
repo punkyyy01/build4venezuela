@@ -4,6 +4,7 @@ import { SignInButton, useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useEffect, useState } from "react";
+import { AuthorBadge } from "@/components/author-badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { createBrowserSupabase } from "@/lib/projects/browser-supabase";
@@ -44,6 +45,9 @@ export function CommentsSection({
   });
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [pendingCommentVotes, setPendingCommentVotes] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   const commentMutation = useMutation({
     mutationFn: (commentBody: string) =>
@@ -76,6 +80,7 @@ export function CommentsSection({
       queryClient.invalidateQueries({ queryKey: commentsQueryKey });
     },
     onMutate: async (commentId) => {
+      setPendingCommentVotes((current) => new Set(current).add(commentId));
       await queryClient.cancelQueries({ queryKey: commentsQueryKey });
       const previousComments =
         queryClient.getQueryData<ProjectComment[]>(commentsQueryKey);
@@ -106,6 +111,13 @@ export function CommentsSection({
       );
 
       return { previousComments };
+    },
+    onSettled: (_data, _error, commentId) => {
+      setPendingCommentVotes((current) => {
+        const next = new Set(current);
+        next.delete(commentId);
+        return next;
+      });
     },
     onSuccess: (data, commentId) => {
       queryClient.setQueryData<ProjectComment[]>(commentsQueryKey, (current) =>
@@ -271,7 +283,7 @@ export function CommentsSection({
   }
 
   function vote(commentId: string) {
-    if (commentVoteMutation.isPending) {
+    if (pendingCommentVotes.has(commentId)) {
       return;
     }
 
@@ -348,18 +360,15 @@ export function CommentsSection({
           comments.map((comment) => (
             <article className="bg-background p-5" key={comment.id}>
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-mono text-sm font-bold uppercase tracking-[0.14em]">
-                    {comment.authorName}
-                  </p>
-                  <p className="mt-1 font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                    {comment.createdAt.slice(0, 10)}
-                  </p>
-                </div>
+                <AuthorBadge
+                  imageUrl={comment.authorImageUrl}
+                  meta={comment.createdAt.slice(0, 10)}
+                  name={comment.authorName}
+                />
                 {signedIn ? (
                   <Button
                     className="h-10 px-4 text-xs uppercase tracking-[0.16em]"
-                    disabled={commentVoteMutation.isPending}
+                    disabled={pendingCommentVotes.has(comment.id)}
                     onClick={() => vote(comment.id)}
                     type="button"
                     variant={comment.voted ? "default" : "outline"}

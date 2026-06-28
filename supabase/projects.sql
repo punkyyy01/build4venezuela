@@ -10,6 +10,8 @@ create table if not exists public.projects (
   contribute_in_url text not null default '',
   description_markdown text not null,
   owner_user_id text not null,
+  owner_name text not null default '',
+  owner_image_url text not null default '',
   spam_score numeric,
   spam_reason text,
   published_at timestamptz default now(),
@@ -21,9 +23,12 @@ alter table public.projects alter column video_url set default '';
 alter table public.projects add column if not exists status text not null default 'published';
 alter table public.projects add column if not exists published_at timestamptz default now();
 alter table public.projects add column if not exists contribute_in_url text not null default '';
+alter table public.projects add column if not exists owner_name text not null default '';
+alter table public.projects add column if not exists owner_image_url text not null default '';
 alter table public.projects drop constraint if exists projects_status_check;
 alter table public.projects add constraint projects_status_check check (status in ('draft', 'published', 'hidden'));
 update public.projects set published_at = created_at where published_at is null and status = 'published';
+update public.projects set owner_name = participant_name where owner_name = '';
 
 create table if not exists public.project_votes (
   project_id uuid not null references public.projects(id) on delete cascade,
@@ -37,10 +42,13 @@ create table if not exists public.project_comments (
   project_id uuid not null references public.projects(id) on delete cascade,
   author_user_id text not null,
   author_name text not null,
+  author_image_url text not null default '',
   body text not null check (char_length(trim(body)) between 3 and 1200),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.project_comments add column if not exists author_image_url text not null default '';
 
 create table if not exists public.project_comment_votes (
   comment_id uuid not null references public.project_comments(id) on delete cascade,
@@ -388,9 +396,13 @@ create table if not exists public.solution_requests (
   description_markdown text not null default '' check (char_length(description_markdown) <= 8000),
   author_user_id text not null,
   author_name text not null,
+  author_image_url text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+
+alter table public.solution_requests add column if not exists author_image_url text not null default '';
 
 create table if not exists public.solution_request_votes (
   request_id uuid not null references public.solution_requests(id) on delete cascade,
@@ -404,10 +416,13 @@ create table if not exists public.solution_request_comments (
   request_id uuid not null references public.solution_requests(id) on delete cascade,
   author_user_id text not null,
   author_name text not null,
+  author_image_url text not null default '',
   body text not null check (char_length(trim(body)) between 3 and 1200),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.solution_request_comments add column if not exists author_image_url text not null default '';
 
 create table if not exists public.solution_request_comment_votes (
   comment_id uuid not null references public.solution_request_comments(id) on delete cascade,

@@ -77,7 +77,13 @@ export async function POST(request: Request, { params }: Props) {
     "Community member";
 
   return NextResponse.json(
-    await createComment(projectId, userId, authorName, parsed.data),
+    await createComment(
+      projectId,
+      userId,
+      authorName,
+      user?.imageUrl ?? "",
+      parsed.data,
+    ),
     { status: 201 },
   );
 }

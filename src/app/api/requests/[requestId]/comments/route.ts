@@ -79,6 +79,7 @@ export async function POST(request: Request, { params }: Props) {
       requestId,
       userId,
       displayName(user),
+      user?.imageUrl ?? "",
       parsed.data,
     ),
     { status: 201 },

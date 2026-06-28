@@ -4,6 +4,7 @@ import { SignInButton, useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useEffect, useState } from "react";
+import { AuthorBadge } from "@/components/author-badge";
 import { ProjectMarkdown } from "@/components/project-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,10 @@ type RequestsBoardProps = {
 const maxDescriptionLength = 8000;
 const maxCommentLength = 1200;
 
+function commentVoteKey(requestId: string, commentId: string) {
+  return `${requestId}:${commentId}`;
+}
+
 export function RequestsBoard({
   initialRequests,
   initialSignedIn,
@@ -52,6 +57,12 @@ export function RequestsBoard({
   );
   const [commentBodies, setCommentBodies] = useState<Record<string, string>>(
     {},
+  );
+  const [pendingRequestVotes, setPendingRequestVotes] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [pendingCommentVotes, setPendingCommentVotes] = useState<Set<string>>(
+    () => new Set(),
   );
 
   const createMutation = useMutation({
@@ -76,6 +87,7 @@ export function RequestsBoard({
   const voteMutation = useMutation({
     mutationFn: (requestId: string) => toggleSolutionRequestVote(requestId),
     onMutate: async (requestId) => {
+      setPendingRequestVotes((current) => new Set(current).add(requestId));
       await queryClient.cancelQueries({ queryKey: requestQueryKeys.list() });
       const previousRequests = queryClient.getQueryData<SolutionRequest[]>(
         requestQueryKeys.list(),
@@ -109,6 +121,13 @@ export function RequestsBoard({
           context.previousRequests,
         );
       }
+    },
+    onSettled: (_data, _error, requestId) => {
+      setPendingRequestVotes((current) => {
+        const next = new Set(current);
+        next.delete(requestId);
+        return next;
+      });
     },
     onSuccess: (vote, requestId) => {
       queryClient.setQueryData<SolutionRequest[]>(
@@ -145,6 +164,8 @@ export function RequestsBoard({
       commentId: string;
     }) => toggleSolutionRequestCommentVote(requestId, commentId),
     onMutate: async ({ requestId, commentId }) => {
+      const pendingKey = commentVoteKey(requestId, commentId);
+      setPendingCommentVotes((current) => new Set(current).add(pendingKey));
       await queryClient.cancelQueries({ queryKey: requestQueryKeys.list() });
       const previousRequests = queryClient.getQueryData<SolutionRequest[]>(
         requestQueryKeys.list(),
@@ -190,6 +211,14 @@ export function RequestsBoard({
           context.previousRequests,
         );
       }
+    },
+    onSettled: (_data, _error, { requestId, commentId }) => {
+      const pendingKey = commentVoteKey(requestId, commentId);
+      setPendingCommentVotes((current) => {
+        const next = new Set(current);
+        next.delete(pendingKey);
+        return next;
+      });
     },
     onSuccess: (vote, { requestId, commentId }) => {
       queryClient.setQueryData<SolutionRequest[]>(
@@ -315,6 +344,22 @@ export function RequestsBoard({
     });
   }
 
+  function voteForRequest(requestId: string) {
+    if (pendingRequestVotes.has(requestId)) {
+      return;
+    }
+
+    voteMutation.mutate(requestId);
+  }
+
+  function voteForComment(requestId: string, commentId: string) {
+    if (pendingCommentVotes.has(commentVoteKey(requestId, commentId))) {
+      return;
+    }
+
+    commentVoteMutation.mutate({ requestId, commentId });
+  }
+
   return (
     <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr]">
       <aside className="border border-border bg-card p-5 lg:sticky lg:top-24 lg:self-start sm:p-6">
@@ -405,9 +450,11 @@ export function RequestsBoard({
                 <article className="bg-background p-5 sm:p-6" key={request.id}>
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                      <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                        {request.authorName} / {request.createdAt.slice(0, 10)}
-                      </p>
+                      <AuthorBadge
+                        imageUrl={request.authorImageUrl}
+                        meta={request.createdAt.slice(0, 10)}
+                        name={request.authorName}
+                      />
                       <button
                         className="mt-3 block text-left font-mono text-2xl font-black uppercase leading-none tracking-[-0.04em] transition hover:text-primary sm:text-4xl"
                         onClick={() => toggleDescription(request.id)}
@@ -419,8 +466,8 @@ export function RequestsBoard({
                     {signedIn ? (
                       <Button
                         className="h-11 px-4 text-xs uppercase tracking-[0.16em]"
-                        disabled={voteMutation.isPending}
-                        onClick={() => voteMutation.mutate(request.id)}
+                        disabled={pendingRequestVotes.has(request.id)}
+                        onClick={() => voteForRequest(request.id)}
                         type="button"
                         variant={request.voted ? "default" : "outline"}
                       >
@@ -510,23 +557,22 @@ export function RequestsBoard({
                             request.comments.map((comment) => (
                               <div className="bg-card p-4" key={comment.id}>
                                 <div className="flex flex-wrap items-center justify-between gap-3">
-                                  <div>
-                                    <p className="font-mono text-xs font-bold uppercase tracking-[0.16em]">
-                                      {comment.authorName}
-                                    </p>
-                                    <p className="mt-1 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-muted-foreground">
-                                      {comment.createdAt.slice(0, 10)}
-                                    </p>
-                                  </div>
+                                  <AuthorBadge
+                                    imageClassName="size-8"
+                                    imageUrl={comment.authorImageUrl}
+                                    meta={comment.createdAt.slice(0, 10)}
+                                    metaClassName="text-[0.65rem]"
+                                    name={comment.authorName}
+                                    nameClassName="text-xs tracking-[0.16em]"
+                                  />
                                   {signedIn ? (
                                     <Button
                                       className="h-9 px-3 text-[0.65rem] uppercase tracking-[0.16em]"
-                                      disabled={commentVoteMutation.isPending}
+                                      disabled={pendingCommentVotes.has(
+                                        commentVoteKey(request.id, comment.id),
+                                      )}
                                       onClick={() =>
-                                        commentVoteMutation.mutate({
-                                          requestId: request.id,
-                                          commentId: comment.id,
-                                        })
+                                        voteForComment(request.id, comment.id)
                                       }
                                       type="button"
                                       variant={

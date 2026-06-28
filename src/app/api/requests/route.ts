@@ -86,6 +86,7 @@ export async function POST(request: Request) {
     parsed.data,
     userId,
     displayName(user),
+    user?.imageUrl ?? "",
   );
 
   for (const locale of routing.locales) {

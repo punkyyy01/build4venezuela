@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
+import { AuthorBadge } from "@/components/author-badge";
 import { ProjectVideoEmbed } from "@/components/project-video-embed";
 import { createBrowserSupabase } from "@/lib/projects/browser-supabase";
 import { fetchProjects, projectQueryKeys } from "@/lib/projects/queries";
@@ -134,9 +135,12 @@ export function RealtimeProjectsGrid({
                 {project.name}
               </h2>
             </a>
-            <p className="mt-5 font-mono text-sm uppercase leading-6 tracking-[0.14em] text-muted-foreground">
-              {project.participantName}
-            </p>
+            <AuthorBadge
+              className="mt-5"
+              imageUrl={project.ownerImageUrl}
+              meta={project.participantName}
+              name={project.ownerName || project.participantName}
+            />
           </article>
         ))}
       </div>

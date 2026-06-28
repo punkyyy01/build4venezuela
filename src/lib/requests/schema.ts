@@ -5,6 +5,7 @@ export type SolutionRequest = {
   name: string;
   descriptionMarkdown: string;
   authorName: string;
+  authorImageUrl: string;
   createdAt: string;
   updatedAt: string;
   votesCount: number;
@@ -16,6 +17,7 @@ export type SolutionRequestComment = {
   id: string;
   requestId: string;
   authorName: string;
+  authorImageUrl: string;
   body: string;
   createdAt: string;
   updatedAt: string;

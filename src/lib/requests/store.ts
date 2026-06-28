@@ -17,6 +17,7 @@ type RequestRow = {
   description_markdown: string;
   author_user_id: string;
   author_name: string;
+  author_image_url?: string | null;
   created_at: string;
   updated_at: string;
   votes_count?: number | null;
@@ -33,6 +34,7 @@ type RequestCommentRow = {
   request_id: string;
   author_user_id: string;
   author_name: string;
+  author_image_url?: string | null;
   body: string;
   created_at: string;
   updated_at: string;
@@ -79,6 +81,7 @@ function toComment(
     id: row.id,
     requestId: row.request_id,
     authorName: row.author_name,
+    authorImageUrl: row.author_image_url ?? "",
     body: row.body,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -97,6 +100,7 @@ function toRequest(
     name: row.name,
     descriptionMarkdown: row.description_markdown,
     authorName: row.author_name,
+    authorImageUrl: row.author_image_url ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     votesCount: row.votes_count ?? 0,
@@ -285,6 +289,7 @@ export async function createSolutionRequest(
   input: SolutionRequestInput,
   authorUserId: string,
   authorName: string,
+  authorImageUrl: string,
 ) {
   const supabase = getSupabase();
   const row = {
@@ -292,6 +297,7 @@ export async function createSolutionRequest(
     description_markdown: input.descriptionMarkdown,
     author_user_id: authorUserId,
     author_name: authorName,
+    author_image_url: authorImageUrl,
   };
 
   return withLocalFallback(
@@ -472,6 +478,7 @@ export async function createSolutionRequestComment(
   requestId: string,
   authorUserId: string,
   authorName: string,
+  authorImageUrl: string,
   input: SolutionRequestCommentInput,
 ) {
   const supabase = getSupabase();
@@ -479,6 +486,7 @@ export async function createSolutionRequestComment(
     request_id: requestId,
     author_user_id: authorUserId,
     author_name: authorName,
+    author_image_url: authorImageUrl,
     body: input.body,
   };
 
