@@ -5,12 +5,14 @@ import { getTranslations } from "next-intl/server";
 import { AuthorBadge } from "@/components/author-badge";
 import { ProjectMarkdown } from "@/components/project-markdown";
 import { ProjectVideoEmbed } from "@/components/project-video-embed";
+import { timed } from "@/lib/log";
 import {
   canEditProject,
-  getProjectBySlug,
+  getCachedProjectBySlug,
   hasVoted,
   listComments,
 } from "@/lib/projects/store";
+import { withTimeout } from "@/lib/timeout";
 import { ProjectShell } from "../../project-shell";
 import { CommentsSection } from "./comments-section";
 import { VoteButton } from "./vote-button";
@@ -19,10 +21,18 @@ type Props = {
   params: Promise<{ locale: string; slug: string }>;
 };
 
+// Bound each per-request data load so a stalled pool fails fast instead of
+// hanging the render to Vercel's 300s wall. See projects/page.tsx.
+const RENDER_TIMEOUT_MS = 8_000;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const t = await getTranslations({ locale, namespace: "ProjectDetail" });
-  const project = await getProjectBySlug(slug);
+  const project = await withTimeout(
+    getCachedProjectBySlug(slug),
+    RENDER_TIMEOUT_MS,
+    "project.metadata.load",
+  );
 
   if (!project) {
     return { title: t("metadata.notFoundTitle") };
@@ -37,16 +47,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProjectPage({ params }: Props) {
   const { locale, slug } = await params;
   const t = await getTranslations({ locale, namespace: "ProjectDetail" });
-  const project = await getProjectBySlug(slug);
+  const project = await timed("project.page.load", { slug }, () =>
+    withTimeout(
+      getCachedProjectBySlug(slug),
+      RENDER_TIMEOUT_MS,
+      "project.page.load",
+    ),
+  );
 
   if (!project) {
     notFound();
   }
 
   const { userId } = await auth();
-  const canEdit = await canEditProject(project.id, userId);
-  const voted = await hasVoted(project.id, userId ?? undefined);
-  const comments = await listComments(project.id, userId ?? undefined);
+  // Independent reads — run them together so a detail view holds a pool
+  // connection for one round-trip instead of three serial ones.
+  const [canEdit, voted, comments] = await timed(
+    "project.page.detail",
+    { slug },
+    () =>
+      withTimeout(
+        Promise.all([
+          canEditProject(project.id, userId),
+          hasVoted(project.id, userId ?? undefined),
+          listComments(project.id, userId ?? undefined),
+        ]),
+        RENDER_TIMEOUT_MS,
+        "project.page.detail",
+      ),
+  );
 
   return (
     <ProjectShell>

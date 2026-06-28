@@ -9,6 +9,7 @@ import {
   projects,
   projectVotes,
 } from "@/db/schema";
+import { cachedAggregate, invalidateCache } from "@/lib/cache";
 import { logError } from "@/lib/log";
 import type {
   Project,
@@ -79,6 +80,17 @@ type LocalData = {
 };
 
 const localStorePath = path.join(process.cwd(), ".data", "projects.json");
+
+// Hot-read cache (Upstash). Short TTL because vote counts/ordering change
+// often — but the realtime channel patches votes on the client, so a slightly
+// stale SSR payload is fine, and writes invalidate explicitly below.
+const CACHE_VERSION = "v1";
+const CACHE_TTL_SECONDS = 60;
+const projectCacheKeys = {
+  list: `build4venezuela:projects:list:${CACHE_VERSION}`,
+  detail: (slug: string) => `build4venezuela:project:${slug}:${CACHE_VERSION}`,
+};
+
 const voteCount = sql<number>`count(${projectVotes.voterId})`.mapWith(Number);
 const commentVoteCount =
   sql<number>`count(${projectCommentVotes.voterId})`.mapWith(Number);
@@ -321,6 +333,37 @@ export async function getProjectBySlug(slug: string) {
   );
 }
 
+// --- Cached read wrappers (render hot paths only) ---------------------------
+//
+// Pages render per request, so route their reads through Redis to keep the
+// Postgres pool idle. Correctness-sensitive callers (slug uniqueness,
+// getProjectById) deliberately keep using the raw reads above so they never
+// see a stale "not found"/"found".
+
+export async function getCachedProjects() {
+  return cachedAggregate(
+    { key: projectCacheKeys.list, ttlSeconds: CACHE_TTL_SECONDS },
+    listProjects,
+  );
+}
+
+export async function getCachedProjectBySlug(slug: string) {
+  return cachedAggregate(
+    { key: projectCacheKeys.detail(slug), ttlSeconds: CACHE_TTL_SECONDS },
+    () => getProjectBySlug(slug),
+  );
+}
+
+/** Flush the list cache (new/updated project, vote change reorders the list). */
+function invalidateProjectListCache() {
+  return invalidateCache(projectCacheKeys.list);
+}
+
+/** Flush both the list and a single project's detail cache. */
+function invalidateProjectCaches(slug: string) {
+  return invalidateCache(projectCacheKeys.list, projectCacheKeys.detail(slug));
+}
+
 export async function getProjectById(projectId: string) {
   const list = await listProjects();
   return list.find((project) => project.id === projectId) ?? null;
@@ -332,7 +375,7 @@ export async function isSlugAvailable(slug: string, currentProjectId?: string) {
 }
 
 export async function createProject(input: ProjectWrite) {
-  return withLocalFallback(
+  const project = await withLocalFallback(
     async () => {
       const [row] = await db
         .insert(projects)
@@ -362,13 +405,16 @@ export async function createProject(input: ProjectWrite) {
       return toProject(project);
     },
   );
+
+  await invalidateProjectListCache();
+  return project;
 }
 
 export async function updateProject(
   projectId: string,
   input: Omit<ProjectWrite, "ownerUserId" | "ownerName" | "ownerImageUrl">,
 ) {
-  return withLocalFallback(
+  const project = await withLocalFallback(
     async () => {
       const [row] = await db
         .update(projects)
@@ -412,6 +458,9 @@ export async function updateProject(
       return toProject(data.projects[index]);
     },
   );
+
+  await invalidateProjectCaches(project.slug);
+  return project;
 }
 
 export async function canEditProject(
@@ -491,7 +540,7 @@ export async function hasVoted(projectId: string, voterId: string | undefined) {
 }
 
 export async function toggleVote(projectId: string, voterId: string) {
-  return withLocalFallback(
+  const result = await withLocalFallback(
     async () => {
       const voted = await hasVoted(projectId, voterId);
 
@@ -531,6 +580,9 @@ export async function toggleVote(projectId: string, voterId: string) {
       return { voted: true, count: await getVoteCount(projectId) };
     },
   );
+
+  await invalidateProjectListCache();
+  return result;
 }
 
 export async function listComments(projectId: string, voterId?: string) {
