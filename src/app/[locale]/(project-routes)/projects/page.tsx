@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { timed } from "@/lib/log";
 import {
   graduatedProposalIds,
   resolveClusters,
@@ -8,7 +9,8 @@ import {
   getCategoryContext,
   getProjectCategoryMap,
 } from "@/lib/projects/category-store";
-import { listProjects } from "@/lib/projects/store";
+import { getCachedProjects } from "@/lib/projects/store";
+import { withTimeout } from "@/lib/timeout";
 import { ProjectShell } from "../project-shell";
 import { RealtimeProjectsGrid } from "./realtime-projects-grid";
 import { SubmitProjectCta } from "./submit-project-cta";
@@ -17,6 +19,11 @@ import { SubmitProjectCta } from "./submit-project-cta";
 // connection — render per request instead of prerendering at build.
 export const dynamic = "force-dynamic";
 
+// Hard bound on the per-request data load. If the DB pool stalls, fail fast
+// (~8s) so the serverless invocation returns instead of pinning a connection to
+// Vercel's 300s wall — which is what cascades into pool exhaustion and 504s.
+const RENDER_TIMEOUT_MS = 8_000;
+
 type Props = {
   params: Promise<{ locale: string }>;
 };
@@ -24,11 +31,20 @@ type Props = {
 export default async function ProjectsPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Projects" });
-  const [projects, categoryMap, context] = await Promise.all([
-    listProjects(),
-    getProjectCategoryMap(),
-    getCategoryContext(),
-  ]);
+  const [projects, categoryMap, context] = await timed(
+    "projects.page.load",
+    {},
+    () =>
+      withTimeout(
+        Promise.all([
+          getCachedProjects(),
+          getProjectCategoryMap(),
+          getCategoryContext(),
+        ]),
+        RENDER_TIMEOUT_MS,
+        "projects.page.load",
+      ),
+  );
 
   const graduated = graduatedProposalIds(context.proposals, context.counts);
   const clusters = resolveClusters(context.proposals, context.counts);
