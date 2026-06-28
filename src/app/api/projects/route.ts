@@ -19,7 +19,7 @@ import {
 } from "@/lib/projects/category-store";
 import { classifyProject } from "@/lib/projects/classify";
 import type { ProjectFormInput } from "@/lib/projects/schema";
-import { createProject, listProjects } from "@/lib/projects/store";
+import { createProject, getCachedProjects } from "@/lib/projects/store";
 import { validateProjectSubmission } from "@/lib/projects/submissions";
 
 async function classifyAndStore(
@@ -58,7 +58,7 @@ function displayName(user: Awaited<ReturnType<typeof currentUser>>) {
 }
 
 export async function GET() {
-  return NextResponse.json({ projects: await listProjects() });
+  return NextResponse.json({ projects: await getCachedProjects() });
 }
 
 export async function POST(request: Request) {
