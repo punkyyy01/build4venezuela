@@ -8,6 +8,15 @@
     "mobileBrand": "B4B",
     "navigationLabel": "主导航",
     "brandPageLink": "品牌",
+    "links": {
+      "home": "首页",
+      "brand": "品牌",
+      "excel": "Excel",
+      "whatsapp": "WhatsApp",
+      "discord": "Discord",
+      "projects": "项目",
+      "resources": "资源"
+    },
     "languageSelector": {
       "label": "语言",
       "locales": {

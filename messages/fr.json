@@ -8,6 +8,15 @@
     "mobileBrand": "B4B",
     "navigationLabel": "Navigation principale",
     "brandPageLink": "Marque",
+    "links": {
+      "home": "Accueil",
+      "brand": "Marque",
+      "excel": "Excel",
+      "whatsapp": "WhatsApp",
+      "discord": "Discord",
+      "projects": "Projets",
+      "resources": "Ressources"
+    },
     "languageSelector": {
       "label": "Langue",
       "locales": {

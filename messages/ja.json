@@ -8,6 +8,15 @@
     "mobileBrand": "B4B",
     "navigationLabel": "メインナビゲーション",
     "brandPageLink": "ブランド",
+    "links": {
+      "home": "ホーム",
+      "brand": "ブランド",
+      "excel": "Excel",
+      "whatsapp": "WhatsApp",
+      "discord": "Discord",
+      "projects": "プロジェクト",
+      "resources": "リソース"
+    },
     "languageSelector": {
       "label": "言語",
       "locales": {
