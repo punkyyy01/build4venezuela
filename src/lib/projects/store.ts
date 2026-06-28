@@ -1,8 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { createClient } from "@supabase/supabase-js";
-import { env } from "@/env";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { db, isDbConfigured } from "@/db";
+import {
+  projectComments,
+  projectCommentVotes,
+  projects,
+  projectVotes,
+} from "@/db/schema";
 import type {
   Project,
   ProjectComment,
@@ -66,30 +72,53 @@ type LocalData = {
   commentVotes?: ProjectCommentVoteRow[];
 };
 
-type StoreErrorDetails = {
-  code?: unknown;
-  details?: unknown;
-  hint?: unknown;
-  message?: unknown;
-  name?: unknown;
-};
-
 const localStorePath = path.join(process.cwd(), ".data", "projects.json");
-const projectSelect = "*, votes_count:project_votes(count)";
-const commentSelect = "*, votes_count:project_comment_votes(count)";
+const voteCount = sql<number>`count(${projectVotes.voterId})`.mapWith(Number);
+const commentVoteCount =
+  sql<number>`count(${projectCommentVotes.voterId})`.mapWith(Number);
 
-function getSupabase() {
-  const url = env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = env.SUPABASE_SERVICE_ROLE_KEY;
+// --- Drizzle row -> domain mappers ------------------------------------------
 
-  if (!url || !key) {
-    return null;
-  }
-
-  return createClient(url, key, {
-    auth: { persistSession: false },
-  });
+function rowToProject(
+  row: typeof projects.$inferSelect,
+  votesCount: number,
+): Project {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    status: (row.status ?? "published") as ProjectStatus,
+    projectUrl: row.projectUrl,
+    countries: row.countries,
+    participantName: row.participantName,
+    videoUrl: row.videoUrl,
+    contributeInUrl: row.contributeInUrl ?? "",
+    descriptionMarkdown: row.descriptionMarkdown,
+    publishedAt: (row.publishedAt ?? row.createdAt).toISOString(),
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    votesCount,
+  };
 }
+
+function rowToComment(
+  row: typeof projectComments.$inferSelect,
+  votesCount: number,
+  voted: boolean,
+): ProjectComment {
+  return {
+    id: row.id,
+    projectId: row.projectId,
+    authorName: row.authorName,
+    body: row.body,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    votesCount,
+    voted,
+  };
+}
+
+// --- Local JSON fallback (used when DATABASE_URL is unset) -------------------
 
 function toProject(row: ProjectRow): Project {
   return {
@@ -123,7 +152,7 @@ function toComment(row: ProjectCommentRow, voted = false): ProjectComment {
   };
 }
 
-function toRow(
+function toLocalRow(
   input: ProjectWrite,
 ): Omit<ProjectRow, "id" | "created_at" | "updated_at"> {
   return {
@@ -167,14 +196,28 @@ function normalizeStoreError(error: unknown) {
     return { message: String(error) };
   }
 
-  const details = error as StoreErrorDetails;
-
+  const details = error as Record<string, unknown>;
   return {
     code: details.code,
-    details: details.details,
-    hint: details.hint,
     message: details.message,
     name: details.name,
+  };
+}
+
+// Build the project domain shape from an insert/update Drizzle row, where the
+// vote count is fetched separately (insert returns no aggregate).
+function toProjectInput(input: Omit<ProjectWrite, "ownerUserId">) {
+  return {
+    slug: input.slug,
+    name: input.name,
+    projectUrl: input.projectUrl,
+    countries: normalizeCountries(input.countries),
+    participantName: input.participantName,
+    videoUrl: input.videoUrl,
+    contributeInUrl: input.contributeInUrl,
+    descriptionMarkdown: input.descriptionMarkdown,
+    spamScore: input.spamScore,
+    spamReason: input.spamReason,
   };
 }
 
@@ -182,9 +225,7 @@ async function withLocalFallback<T>(
   operation: () => Promise<T>,
   fallback: () => Promise<T>,
 ) {
-  const supabase = getSupabase();
-
-  if (!supabase) {
+  if (!isDbConfigured()) {
     return fallback();
   }
 
@@ -192,7 +233,7 @@ async function withLocalFallback<T>(
     return await operation();
   } catch (error) {
     console.warn(
-      "Supabase project store failed; using local fallback",
+      "Drizzle project store failed; using local fallback",
       normalizeStoreError(error),
     );
     return fallback();
@@ -200,37 +241,23 @@ async function withLocalFallback<T>(
 }
 
 export async function listProjects() {
-  const supabase = getSupabase();
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from("projects")
-        .select(projectSelect)
-        .eq("status", "published")
-        .order("published_at", { ascending: false })
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        throw error;
-      }
+      const rows = await db
+        .select({ project: projects, votesCount: voteCount })
+        .from(projects)
+        .leftJoin(projectVotes, eq(projectVotes.projectId, projects.id))
+        .where(eq(projects.status, "published"))
+        .groupBy(projects.id)
+        .orderBy(desc(projects.publishedAt), desc(projects.createdAt));
 
       return sortProjectsByVotes(
-        (data ?? []).map((row) =>
-          toProject({
-            ...(row as ProjectRow),
-            votes_count: row.votes_count?.[0]?.count ?? 0,
-          }),
-        ),
+        rows.map((row) => rowToProject(row.project, row.votesCount)),
       );
     },
     async () => {
       const data = await readLocalData();
-      const projects = data.projects
+      const list = data.projects
         .filter((project) => (project.status ?? "published") === "published")
         .map((project) => ({
           ...project,
@@ -240,39 +267,24 @@ export async function listProjects() {
         }))
         .map(toProject);
 
-      return sortProjectsByVotes(projects);
+      return sortProjectsByVotes(list);
     },
   );
 }
 
 export async function getProjectBySlug(slug: string) {
-  const supabase = getSupabase();
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        return null;
-      }
+      const rows = await db
+        .select({ project: projects, votesCount: voteCount })
+        .from(projects)
+        .leftJoin(projectVotes, eq(projectVotes.projectId, projects.id))
+        .where(and(eq(projects.slug, slug), eq(projects.status, "published")))
+        .groupBy(projects.id)
+        .limit(1);
 
-      const { data, error } = await supabase
-        .from("projects")
-        .select(projectSelect)
-        .eq("slug", slug)
-        .eq("status", "published")
-        .maybeSingle();
-
-      if (error) {
-        throw error;
-      }
-
-      if (!data) {
-        return null;
-      }
-
-      return toProject({
-        ...(data as ProjectRow),
-        votes_count: data.votes_count?.[0]?.count ?? 0,
-      });
+      const row = rows[0];
+      return row ? rowToProject(row.project, row.votesCount) : null;
     },
     async () => {
       const data = await readLocalData();
@@ -295,8 +307,8 @@ export async function getProjectBySlug(slug: string) {
 }
 
 export async function getProjectById(projectId: string) {
-  const projects = await listProjects();
-  return projects.find((project) => project.id === projectId) ?? null;
+  const list = await listProjects();
+  return list.find((project) => project.id === projectId) ?? null;
 }
 
 export async function isSlugAvailable(slug: string, currentProjectId?: string) {
@@ -305,33 +317,21 @@ export async function isSlugAvailable(slug: string, currentProjectId?: string) {
 }
 
 export async function createProject(input: ProjectWrite) {
-  const supabase = getSupabase();
-  const row = toRow(input);
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        throw new Error("Supabase is not configured.");
-      }
+      const [row] = await db
+        .insert(projects)
+        .values({ ...toProjectInput(input), ownerUserId: input.ownerUserId })
+        .returning();
 
-      const { data, error } = await supabase
-        .from("projects")
-        .insert(row)
-        .select("*")
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return toProject(data as ProjectRow);
+      return rowToProject(row, 0);
     },
     async () => {
       const data = await readLocalData();
       const now = new Date().toISOString();
       const project: ProjectRow = {
         id: randomUUID(),
-        ...row,
+        ...toLocalRow(input),
         published_at: now,
         created_at: now,
         updated_at: now,
@@ -348,28 +348,19 @@ export async function updateProject(
   projectId: string,
   input: Omit<ProjectWrite, "ownerUserId">,
 ) {
-  const supabase = getSupabase();
-  const row = toRow({ ...input, ownerUserId: "" });
-  const { owner_user_id: _ownerUserId, ...updateRow } = row;
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        throw new Error("Supabase is not configured.");
+      const [row] = await db
+        .update(projects)
+        .set({ ...toProjectInput(input), updatedAt: new Date() })
+        .where(eq(projects.id, projectId))
+        .returning();
+
+      if (!row) {
+        throw new Error("Project not found.");
       }
 
-      const { data, error } = await supabase
-        .from("projects")
-        .update({ ...updateRow, updated_at: new Date().toISOString() })
-        .eq("id", projectId)
-        .select("*")
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return toProject(data as ProjectRow);
+      return rowToProject(row, 0);
     },
     async () => {
       const data = await readLocalData();
@@ -381,6 +372,10 @@ export async function updateProject(
         throw new Error("Project not found.");
       }
 
+      const { owner_user_id: _owner, ...updateRow } = toLocalRow({
+        ...input,
+        ownerUserId: "",
+      });
       data.projects[index] = {
         ...data.projects[index],
         ...updateRow,
@@ -400,26 +395,17 @@ export async function canEditProject(
     return false;
   }
 
-  const supabase = getSupabase();
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        return false;
-      }
+      const rows = await db
+        .select({ id: projects.id })
+        .from(projects)
+        .where(
+          and(eq(projects.id, projectId), eq(projects.ownerUserId, userId)),
+        )
+        .limit(1);
 
-      const { data, error } = await supabase
-        .from("projects")
-        .select("id")
-        .eq("id", projectId)
-        .eq("owner_user_id", userId)
-        .maybeSingle();
-
-      if (error) {
-        throw error;
-      }
-
-      return Boolean(data);
+      return rows.length > 0;
     },
     async () => {
       const data = await readLocalData();
@@ -432,24 +418,14 @@ export async function canEditProject(
 }
 
 export async function getVoteCount(projectId: string) {
-  const supabase = getSupabase();
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        return 0;
-      }
+      const rows = await db
+        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .from(projectVotes)
+        .where(eq(projectVotes.projectId, projectId));
 
-      const { count, error } = await supabase
-        .from("project_votes")
-        .select("*", { count: "exact", head: true })
-        .eq("project_id", projectId);
-
-      if (error) {
-        throw error;
-      }
-
-      return count ?? 0;
+      return rows[0]?.count ?? 0;
     },
     async () => {
       const data = await readLocalData();
@@ -463,26 +439,20 @@ export async function hasVoted(projectId: string, voterId: string | undefined) {
     return false;
   }
 
-  const supabase = getSupabase();
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        return false;
-      }
+      const rows = await db
+        .select({ projectId: projectVotes.projectId })
+        .from(projectVotes)
+        .where(
+          and(
+            eq(projectVotes.projectId, projectId),
+            eq(projectVotes.voterId, voterId),
+          ),
+        )
+        .limit(1);
 
-      const { data, error } = await supabase
-        .from("project_votes")
-        .select("project_id")
-        .eq("project_id", projectId)
-        .eq("voter_id", voterId)
-        .maybeSingle();
-
-      if (error) {
-        throw error;
-      }
-
-      return Boolean(data);
+      return rows.length > 0;
     },
     async () => {
       const data = await readLocalData();
@@ -494,39 +464,23 @@ export async function hasVoted(projectId: string, voterId: string | undefined) {
 }
 
 export async function toggleVote(projectId: string, voterId: string) {
-  const supabase = getSupabase();
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        throw new Error("Supabase is not configured.");
-      }
-
       const voted = await hasVoted(projectId, voterId);
 
       if (voted) {
-        const { error } = await supabase
-          .from("project_votes")
-          .delete()
-          .eq("project_id", projectId)
-          .eq("voter_id", voterId);
-
-        if (error) {
-          throw error;
-        }
-
+        await db
+          .delete(projectVotes)
+          .where(
+            and(
+              eq(projectVotes.projectId, projectId),
+              eq(projectVotes.voterId, voterId),
+            ),
+          );
         return { voted: false, count: await getVoteCount(projectId) };
       }
 
-      const { error } = await supabase.from("project_votes").insert({
-        project_id: projectId,
-        voter_id: voterId,
-      });
-
-      if (error) {
-        throw error;
-      }
-
+      await db.insert(projectVotes).values({ projectId, voterId });
       return { voted: true, count: await getVoteCount(projectId) };
     },
     async () => {
@@ -553,49 +507,46 @@ export async function toggleVote(projectId: string, voterId: string) {
 }
 
 export async function listComments(projectId: string, voterId?: string) {
-  const supabase = getSupabase();
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        return [];
-      }
+      const rows = await db
+        .select({ comment: projectComments, votesCount: commentVoteCount })
+        .from(projectComments)
+        .leftJoin(
+          projectCommentVotes,
+          eq(projectCommentVotes.commentId, projectComments.id),
+        )
+        .where(eq(projectComments.projectId, projectId))
+        .groupBy(projectComments.id)
+        .orderBy(asc(projectComments.createdAt));
 
-      const { data, error } = await supabase
-        .from("project_comments")
-        .select(commentSelect)
-        .eq("project_id", projectId)
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        throw error;
-      }
-
-      const rows = (data ?? []).map((row) => ({
-        ...(row as ProjectCommentRow),
-        votes_count: row.votes_count?.[0]?.count ?? 0,
-      }));
-      const commentIds = rows.map((comment) => comment.id);
       let votedCommentIds = new Set<string>();
 
-      if (voterId && commentIds.length > 0) {
-        const { data: votes, error: votesError } = await supabase
-          .from("project_comment_votes")
-          .select("comment_id")
-          .eq("voter_id", voterId)
-          .in("comment_id", commentIds);
+      if (voterId && rows.length > 0) {
+        const votes = await db
+          .select({ commentId: projectCommentVotes.commentId })
+          .from(projectCommentVotes)
+          .where(
+            and(
+              eq(projectCommentVotes.voterId, voterId),
+              inArray(
+                projectCommentVotes.commentId,
+                rows.map((row) => row.comment.id),
+              ),
+            ),
+          );
 
-        if (votesError) {
-          throw votesError;
-        }
-
-        votedCommentIds = new Set(
-          (votes ?? []).map((vote) => String(vote.comment_id)),
-        );
+        votedCommentIds = new Set(votes.map((vote) => vote.commentId));
       }
 
       return sortCommentsByVotes(
-        rows.map((row) => toComment(row, votedCommentIds.has(row.id))),
+        rows.map((row) =>
+          rowToComment(
+            row.comment,
+            row.votesCount,
+            votedCommentIds.has(row.comment.id),
+          ),
+        ),
       );
     },
     async () => {
@@ -603,7 +554,7 @@ export async function listComments(projectId: string, voterId?: string) {
       const comments = data.comments ?? [];
       const commentVotes = data.commentVotes ?? [];
 
-      const projectComments = comments
+      const projectCommentList = comments
         .filter((comment) => comment.project_id === projectId)
         .map((comment) => ({
           ...comment,
@@ -621,7 +572,7 @@ export async function listComments(projectId: string, voterId?: string) {
           ),
         );
 
-      return sortCommentsByVotes(projectComments);
+      return sortCommentsByVotes(projectCommentList);
     },
   );
 }
@@ -632,38 +583,24 @@ export async function createComment(
   authorName: string,
   input: ProjectCommentInput,
 ) {
-  const supabase = getSupabase();
-  const row = {
-    project_id: projectId,
-    author_user_id: authorUserId,
-    author_name: authorName,
-    body: input.body,
-  };
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        throw new Error("Supabase is not configured.");
-      }
+      const [row] = await db
+        .insert(projectComments)
+        .values({ projectId, authorUserId, authorName, body: input.body })
+        .returning();
 
-      const { data, error } = await supabase
-        .from("project_comments")
-        .insert(row)
-        .select("*")
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return toComment(data as ProjectCommentRow);
+      return rowToComment(row, 0, false);
     },
     async () => {
       const data = await readLocalData();
       const now = new Date().toISOString();
       const comment: ProjectCommentRow = {
         id: randomUUID(),
-        ...row,
+        project_id: projectId,
+        author_user_id: authorUserId,
+        author_name: authorName,
+        body: input.body,
         created_at: now,
         updated_at: now,
       };
@@ -677,24 +614,14 @@ export async function createComment(
 }
 
 export async function getCommentVoteCount(commentId: string) {
-  const supabase = getSupabase();
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        return 0;
-      }
+      const rows = await db
+        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .from(projectCommentVotes)
+        .where(eq(projectCommentVotes.commentId, commentId));
 
-      const { count, error } = await supabase
-        .from("project_comment_votes")
-        .select("*", { count: "exact", head: true })
-        .eq("comment_id", commentId);
-
-      if (error) {
-        throw error;
-      }
-
-      return count ?? 0;
+      return rows[0]?.count ?? 0;
     },
     async () => {
       const data = await readLocalData();
@@ -713,26 +640,20 @@ export async function hasCommentVoted(
     return false;
   }
 
-  const supabase = getSupabase();
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        return false;
-      }
+      const rows = await db
+        .select({ commentId: projectCommentVotes.commentId })
+        .from(projectCommentVotes)
+        .where(
+          and(
+            eq(projectCommentVotes.commentId, commentId),
+            eq(projectCommentVotes.voterId, voterId),
+          ),
+        )
+        .limit(1);
 
-      const { data, error } = await supabase
-        .from("project_comment_votes")
-        .select("comment_id")
-        .eq("comment_id", commentId)
-        .eq("voter_id", voterId)
-        .maybeSingle();
-
-      if (error) {
-        throw error;
-      }
-
-      return Boolean(data);
+      return rows.length > 0;
     },
     async () => {
       const data = await readLocalData();
@@ -744,39 +665,23 @@ export async function hasCommentVoted(
 }
 
 export async function toggleCommentVote(commentId: string, voterId: string) {
-  const supabase = getSupabase();
-
   return withLocalFallback(
     async () => {
-      if (!supabase) {
-        throw new Error("Supabase is not configured.");
-      }
-
       const voted = await hasCommentVoted(commentId, voterId);
 
       if (voted) {
-        const { error } = await supabase
-          .from("project_comment_votes")
-          .delete()
-          .eq("comment_id", commentId)
-          .eq("voter_id", voterId);
-
-        if (error) {
-          throw error;
-        }
-
+        await db
+          .delete(projectCommentVotes)
+          .where(
+            and(
+              eq(projectCommentVotes.commentId, commentId),
+              eq(projectCommentVotes.voterId, voterId),
+            ),
+          );
         return { voted: false, count: await getCommentVoteCount(commentId) };
       }
 
-      const { error } = await supabase.from("project_comment_votes").insert({
-        comment_id: commentId,
-        voter_id: voterId,
-      });
-
-      if (error) {
-        throw error;
-      }
-
+      await db.insert(projectCommentVotes).values({ commentId, voterId });
       return { voted: true, count: await getCommentVoteCount(commentId) };
     },
     async () => {

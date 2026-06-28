@@ -22,9 +22,10 @@ This repo uses Next `16.2.9` and React `19.2.4`; APIs and file conventions may d
 ## Data And Env
 
 - Required env vars are enforced in `src/env.ts`; copy keys from `.env.example`. Tests that import env-backed modules must set fake env vars before dynamic imports, as `src/lib/projects/spam.test.ts` does.
-- Project persistence is centralized in `src/lib/projects/store.ts`: Supabase service-role client first, then local fallback at `.data/projects.json` on store failures.
-- Supabase schema/RLS/realtime setup is in `supabase/projects.sql`; update it when project, vote, comment, or publication-event tables change.
-- Realtime UI subscribes directly from the browser with the Supabase anon key via `src/lib/projects/browser-supabase.ts`.
+- Server-side reads/writes go through Drizzle (`src/db/index.ts` + `src/db/schema.ts`) over the `DATABASE_URL` Postgres connection. `DATABASE_URL` is optional: when unset, the project/category stores fall back to local JSON in `.data/`. **In production `DATABASE_URL` must be set, or the app silently serves the empty local fallback.**
+- Project persistence is centralized in `src/lib/projects/store.ts` (Drizzle, then `.data/projects.json` fallback); cluster persistence is in `src/lib/projects/category-store.ts` (Drizzle, then `.data/categories.json`).
+- Schema source of truth is the raw SQL in `supabase/migrations/` (plus the consolidated `supabase/projects.sql`): triggers, functions, RLS, and the realtime event-queue tables live there. `src/db/schema.ts` is the typed query surface only — keep it in sync by hand or `bun run db:pull`; do NOT `drizzle-kit push`.
+- Realtime UI subscribes directly from the browser with the Supabase anon key via `src/lib/projects/browser-supabase.ts` (Supabase Realtime has no Drizzle equivalent).
 
 ## UI Conventions
 
