@@ -10,15 +10,13 @@ type Resource = {
 const resources: Resource[] = [
   {
     title: "Build4Venezuela Deck",
-    description:
-      "Presentacion del proyecto Build4Venezuela en Google Slides.",
+    description: "Presentacion del proyecto Build4Venezuela en Google Slides.",
     href: "https://docs.google.com/presentation/d/17mFtyMMBRuQ3zvZFtnFBD4Ig3JMfqJNgicabChnBVkU/edit?usp=drivesdk",
     kind: "Slides",
   },
   {
     title: "Proyectos",
-    description:
-      "Listado de proyectos en Google Sheets.",
+    description: "Listado de proyectos en Google Sheets.",
     href: "https://docs.google.com/spreadsheets/d/1izXHF-aZOOu7VvfmbpH8TmVCFbjqwm2eqnpJN2ODrCo/htmlview?gid=608803999&pru=AAABnyqRshg*Od-l2t9POoYbazcuvEwnxw#gid=608803999",
     kind: "Sheets",
   },

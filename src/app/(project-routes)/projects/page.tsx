@@ -1,10 +1,34 @@
+import {
+  graduatedProposalIds,
+  resolveClusters,
+  resolveProjectCluster,
+} from "@/lib/projects/categories";
+import {
+  getCategoryContext,
+  getProjectCategoryMap,
+} from "@/lib/projects/category-store";
 import { listProjects } from "@/lib/projects/store";
 import { ProjectShell } from "../project-shell";
 import { RealtimeProjectsGrid } from "./realtime-projects-grid";
 import { SubmitProjectCta } from "./submit-project-cta";
 
 export default async function ProjectsPage() {
-  const projects = await listProjects();
+  const [projects, categoryMap, context] = await Promise.all([
+    listProjects(),
+    getProjectCategoryMap(),
+    getCategoryContext(),
+  ]);
+
+  const graduated = graduatedProposalIds(context.proposals, context.counts);
+  const clusters = resolveClusters(context.proposals, context.counts);
+  const assignments: Record<string, string> = {};
+  for (const project of projects) {
+    assignments[project.slug] = resolveProjectCluster(
+      project,
+      categoryMap.get(project.id),
+      graduated,
+    );
+  }
 
   return (
     <ProjectShell>
@@ -22,7 +46,11 @@ export default async function ProjectsPage() {
             <SubmitProjectCta />
           </div>
 
-          <RealtimeProjectsGrid initialProjects={projects} />
+          <RealtimeProjectsGrid
+            assignments={assignments}
+            clusters={clusters}
+            initialProjects={projects}
+          />
         </div>
       </section>
     </ProjectShell>
