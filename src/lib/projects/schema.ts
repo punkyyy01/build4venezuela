@@ -46,6 +46,7 @@ export function sortProjectsByVotes(projects: Project[]) {
   return [...projects].sort(
     (a, b) =>
       b.votesCount - a.votesCount ||
+      Number(Boolean(b.videoUrl)) - Number(Boolean(a.videoUrl)) ||
       (b.publishedAt ?? b.createdAt).localeCompare(
         a.publishedAt ?? a.createdAt,
       ),
