@@ -3,9 +3,11 @@ import { headers } from "next/headers";
 import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SponsorLink } from "@/components/sponsor-link";
+import { Countdown } from "./countdown";
 import { RealtimeVisitors } from "./realtime-visitors";
 
 const assetPath = "/BFV/assets/";
+const closureEventTargetIso = "2026-07-02T00:00:00.000Z";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -20,6 +22,19 @@ type Channel = {
 type ImpactStat = {
   value: string;
   label: string;
+};
+
+type CountdownLabels = {
+  days: string;
+  hours: string;
+  minutes: string;
+  seconds: string;
+  complete: string;
+};
+
+type Principle = {
+  title: string;
+  text: string;
 };
 
 function VMark({ className }: { className: string }) {
@@ -59,6 +74,9 @@ export default async function Home({ params }: Props) {
   const projectIdeas = t.raw("projectIdeas") as string[];
   const channels = t.raw("channels") as Channel[];
   const impactStats = t.raw("impactStats") as ImpactStat[];
+  const countdownLabels = t.raw("hero.countdown.labels") as CountdownLabels;
+  const principles = t.raw("principles.items") as Principle[];
+  const principleFilter = t.raw("principles.filter.items") as string[];
   const latestInfoHref = `https://www.perplexity.ai/?${new URLSearchParams({
     q: t("context.latestInfoQuery"),
   })}`;
@@ -128,12 +146,23 @@ export default async function Home({ params }: Props) {
           </div>
 
           <div className="w-full max-w-[860px] text-center font-mono uppercase">
-            <a
-              className="inline-block text-[clamp(0.95rem,1.75vw,1.45rem)] font-light leading-snug tracking-[0.24em] text-foreground transition hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-background"
-              href="https://build4venezuela.com/luma"
-            >
-              {t("hero.eventLink")}
-            </a>
+            <div className="mx-auto max-w-[760px] border border-border bg-background/70 p-4 sm:p-5">
+              <a
+                className="inline-flex border border-primary/70 px-4 py-3 text-xs font-bold tracking-[0.2em] text-primary transition hover:border-foreground hover:bg-foreground hover:text-background focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-background"
+                href="https://build4venezuela.com/luma"
+              >
+                {t("hero.closure.label")}
+              </a>
+              <p className="mt-4 text-[clamp(0.95rem,1.75vw,1.45rem)] font-light leading-snug tracking-[0.2em] text-foreground">
+                {t("hero.closure.date")}
+              </p>
+              <div className="mt-5">
+                <Countdown
+                  labels={countdownLabels}
+                  targetIso={closureEventTargetIso}
+                />
+              </div>
+            </div>
             <div className="mt-4 flex justify-center gap-4 text-xs font-light tracking-[0.24em] text-foreground/65 sm:gap-6 sm:text-sm">
               <a
                 className="transition hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-background"
@@ -247,6 +276,64 @@ export default async function Home({ params }: Props) {
               </p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="px-5 pb-20 sm:px-8 sm:pb-24 lg:px-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 grid gap-6 border-border border-b pb-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
+            <div>
+              <p className="font-mono text-sm uppercase tracking-[0.28em] text-destructive">
+                {t("principles.eyebrow")}
+              </p>
+              <h2 className="mt-4 font-mono text-[clamp(2.2rem,5vw,5rem)] font-black uppercase leading-[0.88] tracking-[-0.06em]">
+                {t("principles.title")}
+              </h2>
+            </div>
+            <p className="font-mono text-sm uppercase leading-6 tracking-[0.16em] text-muted-foreground">
+              {t("principles.description")}
+            </p>
+          </div>
+
+          <div className="grid gap-px bg-border md:grid-cols-2 lg:grid-cols-4">
+            {principles.map((principle, index) => (
+              <article
+                className="bg-background p-6 sm:p-7"
+                key={principle.title}
+              >
+                <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">
+                  0{index + 1}
+                </p>
+                <h3 className="mt-6 font-mono text-2xl font-black uppercase leading-none tracking-[-0.03em]">
+                  {principle.title}
+                </h3>
+                <p className="mt-5 font-mono text-sm uppercase leading-6 tracking-[0.12em] text-muted-foreground">
+                  {principle.text}
+                </p>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-px grid gap-px bg-border lg:grid-cols-[0.65fr_1.35fr]">
+            <div className="bg-foreground p-6 text-background sm:p-7">
+              <p className="font-mono text-xs uppercase tracking-[0.24em] text-background/55">
+                {t("principles.filter.eyebrow")}
+              </p>
+              <h3 className="mt-5 font-mono text-[clamp(2rem,4vw,3.5rem)] font-black uppercase leading-[0.9] tracking-[-0.06em]">
+                {t("principles.filter.title")}
+              </h3>
+            </div>
+            <div className="grid gap-px bg-border sm:grid-cols-2">
+              {principleFilter.map((item) => (
+                <p
+                  className="bg-background p-6 font-mono text-sm uppercase leading-6 tracking-[0.14em] text-foreground/75 sm:p-7"
+                  key={item}
+                >
+                  {item}
+                </p>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 

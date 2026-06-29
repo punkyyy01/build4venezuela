@@ -37,6 +37,38 @@
     "cta": "Télécharger les images sociales",
     "download": "Télécharger {fileName}",
     "downloadFormat": "Télécharger {format}",
+    "brief": {
+      "eyebrow": "Brief de diffusion",
+      "title": "Faire arriver les outils au Venezuela.",
+      "description": "Le but n'est pas de mettre la technologie en avant. Le but est que chaque personne touchée, proche ou bénévole sache que des outils utiles existent déjà et où les trouver.",
+      "message": "Des centaines de personnes construisent des outils après les séismes. Ils n'aident que s'ils atteignent celles et ceux qui en ont besoin. Partagez, taguez et aidez le signal à circuler au Venezuela.",
+      "checklistEyebrow": "Avant de publier",
+      "checklist": [
+        "Utilisez #Build4Venezuela.",
+        "Mentionnez un outil concret et son utilité.",
+        "Vérifiez le lien et le statut du projet sur build4venezuela.com/projects.",
+        "Taguez des créateurs ou comptes vénézuéliens qui peuvent amplifier.",
+        "Gardez un ton respectueux : espoir, pas spectacle."
+      ],
+      "linksEyebrow": "Liens clés",
+      "links": [
+        {
+          "label": "Projets",
+          "href": "/fr/projects",
+          "text": "Partagez le répertoire des outils prêts ou en cours."
+        },
+        {
+          "label": "Kit de marque",
+          "href": "/fr/brand#social",
+          "text": "Utilisez les visuels prêts à publier et les ressources officielles."
+        },
+        {
+          "label": "WhatsApp",
+          "href": "https://build4venezuela.com/whatsapp",
+          "text": "Faites circuler les outils utiles dans les groupes communautaires informels."
+        }
+      ]
+    },
     "assets": {
       "eyebrow": "Ressources",
       "title": "Logos et marques",
@@ -95,30 +127,78 @@
       "mapAlt": "Carte du Venezuela",
       "eyebrow": "Un hackathon humanitaire pour",
       "title": "construire des solutions technologiques pour le Venezuela.",
-      "eventLink": "26, 27, 28 juin // en ligne // luma.com",
+      "closure": {
+        "label": "Événement de clôture",
+        "date": "Mercredi 1er juillet // 19:00 UTC-5 // en ligne"
+      },
+      "countdown": {
+        "labels": {
+          "days": "Jours",
+          "hours": "Heures",
+          "minutes": "Minutes",
+          "seconds": "Secondes",
+          "complete": "La clôture a commencé. Continuez à construire."
+        }
+      },
       "whatsapp": "WhatsApp",
       "discord": "Discord",
-      "description": "Parce qu'en temps de crise, la technologie peut aussi être une forme de solidarité.",
+      "description": "L'événement formel se clôture, mais le travail continue : améliorez votre projet, contribuez à un projet existant ou proposez ce dont le Venezuela a encore besoin.",
       "poweredBy": "Propulsé par"
     },
     "context": {
       "eyebrow": "Contexte",
-      "title": "Construire avec urgence, pas avec du bruit.",
-      "firstParagraph": "Le Venezuela fait face à une urgence majeure après deux forts tremblements de terre le 24 juin. Les derniers rapports font état d'au moins 188 morts et de plus de 1 500 blessés.",
-      "secondParagraph": "Les équipes de secours recherchent toujours des survivants. Des vols d'aide internationale et des équipes de soutien ont commencé à arriver, tandis que les hôpitaux, les bâtiments et les communautés touchées font face à une crise humanitaire en cours.",
+      "title": "Construire au-delà d'une semaine.",
+      "firstParagraph": "Les séismes ont laissé des problèmes qui demandent de l'aide maintenant et ne seront pas résolus en une semaine. Familles, bénévoles, organisations et communautés ont encore besoin d'informations fiables, de coordination, d'accès à l'aide et d'outils qui fonctionnent avec une connectivité limitée.",
+      "secondParagraph": "Build4Venezuela passe d'un sprint à un effort collectif plus long : du soutien à court terme pour l'urgence, et des solutions à long terme pour aider le Venezuela à se relever, se coordonner et devenir plus fort.",
       "latestInfo": "Voir les dernières informations",
       "latestInfoQuery": "Quelles sont les dernières nouvelles sur les tremblements de terre au Venezuela ?"
     },
     "impactStats": [
-      { "value": "188+", "label": "personnes décédées" },
-      { "value": "1,500+", "label": "personnes blessées" },
-      { "value": "346+", "label": "structures endommagées" },
-      { "value": "200+", "label": "personnes potentiellement piégées" }
+      { "value": "01", "label": "continuez à travailler sur votre projet" },
+      { "value": "02", "label": "collaborez avec une équipe existante" },
+      { "value": "03", "label": "proposez un nouveau problème à résoudre" },
+      {
+        "value": "04",
+        "label": "concevez pour la reconstruction, pas seulement la réponse"
+      }
     ],
+    "principles": {
+      "eyebrow": "Principes d'action collective",
+      "title": "La confiance est le système d'exploitation.",
+      "description": "Ces principes guident le code, la communication, la coordination, le design, les messages de groupe et les échanges avec les médias. Si une décision les contredit, il faut la revoir avant d'avancer.",
+      "items": [
+        {
+          "title": "Les personnes d'abord",
+          "text": "Construisez pour quelqu'un au Venezuela avec peu de réseau, peu de batterie et des besoins urgents, pas pour des démos."
+        },
+        {
+          "title": "Pas de duplication",
+          "text": "Avant de construire quelque chose de nouveau, demandez ce qui existe déjà et comment vous y connecter."
+        },
+        {
+          "title": "Confiance durable",
+          "text": "Soyez transparents sur ce qui fonctionne, ce qui ne fonctionne pas et ce que chaque outil peut réellement faire."
+        },
+        {
+          "title": "Ne pas nuire",
+          "text": "Respectez les équipes de secours et les organismes spécialisés. N'amplifiez pas d'informations non vérifiées et ne saturez pas les canaux d'urgence."
+        }
+      ],
+      "filter": {
+        "eyebrow": "Filtre de décision",
+        "title": "Avant de publier ou construire",
+        "items": [
+          "Est-ce utile à une personne réelle au Venezuela maintenant, ou seulement à notre besoin de nous sentir utiles ?",
+          "Dupliquons-nous quelque chose qui existe déjà, ou pouvons-nous coordonner ?",
+          "Cela crée-t-il de la confiance ou de la confusion ?",
+          "Cela peut-il gêner le travail des secours ou d'équipes spécialisées ?"
+        ]
+      }
+    },
     "projects": {
       "eyebrow": "Idées de projets",
       "title": "Ce que vous pouvez construire",
-      "description": "Choisissez un problème concret. Réduisez le périmètre. Laissez quelque chose que quelqu'un d'autre pourra utiliser lundi."
+      "description": "Choisissez un problème concret. Connectez-vous à ce qui existe déjà. Laissez quelque chose d'utile pour l'urgence et assez durable pour la reconstruction."
     },
     "projectIdeas": [
       "Des annuaires vérifiés pour les abris, les centres de collecte et les soins médicaux.",
@@ -130,13 +210,13 @@
     ],
     "join": {
       "eyebrow": "Rejoindre",
-      "title": "Venez avec une compétence. Repartez avec un projet."
+      "title": "Continuez à construire après la clôture."
     },
     "channels": [
       {
         "label": "Luma",
         "href": "https://build4venezuela.com/luma",
-        "text": "Inscrivez-vous à l'événement et recevez les mises à jour officielles."
+        "text": "Rejoignez l'événement de clôture et recevez les mises à jour officielles."
       },
       {
         "label": "WhatsApp",
@@ -146,7 +226,7 @@
       {
         "label": "Discord",
         "href": "https://build4venezuela.com/discord",
-        "text": "Trouvez une équipe, un canal de projet, des mentors et du support technique."
+        "text": "Trouvez une équipe, continuez un projet, proposez-en un nouveau et coordonnez du soutien."
       },
       {
         "label": "GitHub",
@@ -376,6 +456,11 @@
         "title": "Projects",
         "description": "Project list in Google Sheets.",
         "kind": "Sheets"
+      },
+      "brand": {
+        "title": "Marque et brief de diffusion",
+        "description": "Ressources officielles, guide de publication et liens pour aider les outils à atteindre le Venezuela.",
+        "kind": "Diffusion"
       },
       "github": {
         "title": "GitHub",

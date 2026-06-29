@@ -37,6 +37,38 @@
     "cta": "Download social images",
     "download": "Download {fileName}",
     "downloadFormat": "Download {format}",
+    "brief": {
+      "eyebrow": "Dissemination brief",
+      "title": "Make the tools reach Venezuela.",
+      "description": "The goal is not to make the technology look impressive. The goal is for every affected person, family member, or volunteer to know that useful tools already exist and where to find them.",
+      "message": "Hundreds of people are building tools after the earthquakes. They only help if they reach the people who need them. Share, tag, and help the signal travel inside Venezuela.",
+      "checklistEyebrow": "Before posting",
+      "checklist": [
+        "Use #Build4Venezuela.",
+        "Mention one concrete tool and what it helps with.",
+        "Verify the project link and status at build4venezuela.com/projects.",
+        "Tag Venezuelan creators or community accounts that can amplify.",
+        "Keep the tone respectful: hope, not spectacle."
+      ],
+      "linksEyebrow": "Core links",
+      "links": [
+        {
+          "label": "Projects",
+          "href": "/en/projects",
+          "text": "Share the directory of tools that are live or in progress."
+        },
+        {
+          "label": "Brand kit",
+          "href": "/en/brand#social",
+          "text": "Use ready-to-post visuals and official campaign assets."
+        },
+        {
+          "label": "WhatsApp",
+          "href": "https://build4venezuela.com/whatsapp",
+          "text": "Send useful tools into informal community groups."
+        }
+      ]
+    },
     "assets": {
       "eyebrow": "Assets",
       "title": "Logos and marks",
@@ -95,30 +127,75 @@
       "mapAlt": "Map of Venezuela",
       "eyebrow": "A humanitarian hackathon to",
       "title": "build tech solutions for Venezuela.",
-      "eventLink": "June 26, 27, 28 // online // luma.com",
+      "closure": {
+        "label": "Closure event",
+        "date": "Wednesday, July 1 // 7:00 PM UTC-5 // online"
+      },
+      "countdown": {
+        "labels": {
+          "days": "Days",
+          "hours": "Hours",
+          "minutes": "Minutes",
+          "seconds": "Seconds",
+          "complete": "The closure event has started. Keep building."
+        }
+      },
       "whatsapp": "WhatsApp",
       "discord": "Discord",
-      "description": "Because in moments of crisis, technology can also be a form of solidarity.",
+      "description": "The formal event is closing, but the work continues: keep improving projects, contribute to existing ones, or propose what Venezuela still needs.",
       "poweredBy": "Powered by"
     },
     "context": {
       "eyebrow": "Context",
-      "title": "Build with urgency, not noise.",
-      "firstParagraph": "Venezuela is facing a major emergency after two strong earthquakes on June 24. The latest reports mention at least 188 people killed and more than 1,500 injured.",
-      "secondParagraph": "Rescue teams are still searching for survivors. International aid flights and support teams have started arriving, while hospitals, buildings, and affected communities face a developing humanitarian crisis.",
+      "title": "Build beyond one week.",
+      "firstParagraph": "The earthquakes left problems that need help now and will not be solved in one week. Families, volunteers, organizations, and communities still need reliable information, coordination, access to aid, and tools that work with limited connectivity.",
+      "secondParagraph": "Build4Venezuela is moving from a sprint into a longer collective effort: short-term support for the emergency, and long-term solutions that help Venezuela recover, coordinate, and grow stronger.",
       "latestInfo": "See the latest information",
       "latestInfoQuery": "What's the latest on the Venezuela earthquakes?"
     },
     "impactStats": [
-      { "value": "188+", "label": "people killed" },
-      { "value": "1,500+", "label": "people injured" },
-      { "value": "346+", "label": "damaged structures" },
-      { "value": "200+", "label": "people possibly trapped" }
+      { "value": "01", "label": "continue working on your project" },
+      { "value": "02", "label": "collaborate with an existing team" },
+      { "value": "03", "label": "propose a new problem to solve" },
+      { "value": "04", "label": "design for recovery, not only response" }
     ],
+    "principles": {
+      "eyebrow": "Collective action principles",
+      "title": "Trust is the operating system.",
+      "description": "These principles guide code, communication, coordination, design decisions, group messages, and media interactions. If a decision contradicts them, revisit it before moving forward.",
+      "items": [
+        {
+          "title": "People first",
+          "text": "Build for someone in Venezuela with low signal, low battery, and urgent needs, not for demos."
+        },
+        {
+          "title": "No duplication",
+          "text": "Before building something new, ask what already exists and how to connect with it."
+        },
+        {
+          "title": "Long-term trust",
+          "text": "Be transparent about what works, what does not, and what each tool can realistically do."
+        },
+        {
+          "title": "Do no harm",
+          "text": "Respect rescue teams and specialized organizations. Do not amplify unverified rescue information or saturate emergency channels."
+        }
+      ],
+      "filter": {
+        "eyebrow": "Decision filter",
+        "title": "Before publishing or building",
+        "items": [
+          "Does this serve a real person in Venezuela right now, or just make us feel useful?",
+          "Are we duplicating something that already exists, or can we coordinate?",
+          "Does this create trust, or does it create confusion?",
+          "Could this interfere with rescue work or specialized emergency teams?"
+        ]
+      }
+    },
     "projects": {
       "eyebrow": "Project ideas",
       "title": "What you can build",
-      "description": "Choose a concrete problem. Reduce the scope. Leave something someone else can use on Monday."
+      "description": "Choose a concrete problem. Connect with what already exists. Leave something useful for the emergency and durable enough for recovery."
     },
     "projectIdeas": [
       "Verified directories for shelters, collection centers, and medical care.",
@@ -130,13 +207,13 @@
     ],
     "join": {
       "eyebrow": "Join",
-      "title": "Come with a skill. Leave with a project."
+      "title": "Keep building after the bell."
     },
     "channels": [
       {
         "label": "Luma",
         "href": "https://build4venezuela.com/luma",
-        "text": "Register for the event and receive official updates."
+        "text": "Join the closure event and receive official updates."
       },
       {
         "label": "WhatsApp",
@@ -146,7 +223,7 @@
       {
         "label": "Discord",
         "href": "https://build4venezuela.com/discord",
-        "text": "Find a team, project channel, mentors, and technical support."
+        "text": "Find a team, continue a project, propose a new one, and coordinate support."
       },
       {
         "label": "GitHub",
@@ -376,6 +453,11 @@
         "title": "Projects",
         "description": "Project list in Google Sheets.",
         "kind": "Sheets"
+      },
+      "brand": {
+        "title": "Brand and sharing brief",
+        "description": "Official assets, posting guidance, and links to help the tools reach Venezuela.",
+        "kind": "Share"
       },
       "github": {
         "title": "GitHub",

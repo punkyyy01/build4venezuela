@@ -33,6 +33,12 @@ type SocialAsset = {
   height: number;
 };
 
+type BriefLink = {
+  label: string;
+  href: string;
+  text: string;
+};
+
 const brandAssets: BrandAsset[] = [
   {
     key: "logo",
@@ -166,6 +172,8 @@ export default async function BrandPage({ params }: Props) {
   setRequestLocale(locale);
 
   const t = await getTranslations("BrandPage");
+  const checklist = t.raw("brief.checklist") as string[];
+  const links = t.raw("brief.links") as BriefLink[];
 
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
@@ -189,6 +197,62 @@ export default async function BrandPage({ params }: Props) {
               >
                 {t("cta")}
               </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 pb-20 sm:px-8 sm:pb-24 lg:px-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 grid gap-6 border-border border-b pb-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
+            <div>
+              <p className="font-mono text-sm uppercase tracking-[0.28em] text-accent">
+                {t("brief.eyebrow")}
+              </p>
+              <h2 className="mt-4 font-mono text-[clamp(2.2rem,5vw,5rem)] font-black uppercase leading-[0.88] tracking-[-0.06em]">
+                {t("brief.title")}
+              </h2>
+            </div>
+            <div className="font-mono text-sm uppercase leading-6 tracking-[0.16em] text-muted-foreground">
+              <p>{t("brief.description")}</p>
+              <p className="mt-5 text-foreground">{t("brief.message")}</p>
+            </div>
+          </div>
+
+          <div className="grid gap-px bg-border lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="bg-background p-6 sm:p-7">
+              <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">
+                {t("brief.checklistEyebrow")}
+              </p>
+              <div className="mt-6 grid gap-px bg-border sm:grid-cols-2">
+                {checklist.map((item) => (
+                  <p
+                    className="bg-background p-5 font-mono text-sm uppercase leading-6 tracking-[0.14em] text-foreground/75"
+                    key={item}
+                  >
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-3 bg-foreground p-6 text-background sm:p-7">
+              <p className="font-mono text-xs uppercase tracking-[0.24em] text-background/50">
+                {t("brief.linksEyebrow")}
+              </p>
+              {links.map((link) => (
+                <a
+                  className="group border border-background/15 p-5 font-mono transition hover:border-background hover:bg-background hover:text-foreground"
+                  href={link.href}
+                  key={link.href}
+                >
+                  <span className="block text-xl font-black uppercase tracking-[0.04em]">
+                    {link.label}
+                  </span>
+                  <span className="mt-3 block text-sm uppercase leading-6 tracking-[0.14em] text-background/65 transition group-hover:text-foreground/75">
+                    {link.text}
+                  </span>
+                </a>
+              ))}
             </div>
           </div>
         </div>

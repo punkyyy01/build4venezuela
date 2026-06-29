@@ -2,29 +2,39 @@ import { getTranslations } from "next-intl/server";
 import { ProjectShell } from "../project-shell";
 
 type Resource = {
-  key: "deck" | "projects" | "github" | "discord";
+  key: "deck" | "projects" | "brand" | "github" | "discord";
   title: string;
   description: string;
   href: string;
   kind: string;
+  external: boolean;
 };
 
 const resourceLinks = [
   {
     key: "deck",
     href: "https://docs.google.com/presentation/d/17mFtyMMBRuQ3zvZFtnFBD4Ig3JMfqJNgicabChnBVkU/edit?usp=drivesdk",
+    external: true,
   },
   {
     key: "projects",
     href: "https://docs.google.com/spreadsheets/d/1izXHF-aZOOu7VvfmbpH8TmVCFbjqwm2eqnpJN2ODrCo/htmlview?gid=608803999&pru=AAABnyqRshg*Od-l2t9POoYbazcuvEwnxw#gid=608803999",
+    external: true,
+  },
+  {
+    key: "brand",
+    href: "/brand",
+    external: false,
   },
   {
     key: "github",
     href: "https://github.com/crafter-station/build4venezuela",
+    external: true,
   },
   {
     key: "discord",
     href: "https://build4venezuela.com/discord",
+    external: true,
   },
 ] as const;
 
@@ -37,6 +47,7 @@ export default async function RecursosPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: "Resources" });
   const resources: Resource[] = resourceLinks.map((resource) => ({
     ...resource,
+    href: resource.external ? resource.href : `/${locale}${resource.href}`,
     title: t(`items.${resource.key}.title`),
     description: t(`items.${resource.key}.description`),
     kind: t(`items.${resource.key}.kind`),
@@ -61,8 +72,8 @@ export default async function RecursosPage({ params }: Props) {
                 className="group flex flex-col border-border border-r border-b bg-background p-6 transition hover:bg-card sm:p-7"
                 href={resource.href}
                 key={resource.href}
-                rel="noopener noreferrer"
-                target="_blank"
+                rel={resource.external ? "noopener noreferrer" : undefined}
+                target={resource.external ? "_blank" : undefined}
               >
                 <p className="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">
                   {resource.kind}

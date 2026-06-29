@@ -37,6 +37,38 @@
     "cta": "Descargar imágenes sociales",
     "download": "Descargar {fileName}",
     "downloadFormat": "Descargar {format}",
+    "brief": {
+      "eyebrow": "Brief de difusión",
+      "title": "Que las herramientas lleguen a Venezuela.",
+      "description": "El objetivo no es lucir la tecnología. El objetivo es que cada persona damnificada, familiar o voluntaria sepa que ya existen herramientas útiles y dónde encontrarlas.",
+      "message": "Cientos de personas están construyendo herramientas después de los terremotos. Solo ayudan si llegan a quienes las necesitan. Comparte, etiqueta y haz que la señal llegue dentro de Venezuela.",
+      "checklistEyebrow": "Antes de publicar",
+      "checklist": [
+        "Usa #Build4Venezuela.",
+        "Menciona una herramienta concreta y para qué sirve.",
+        "Verifica el enlace y estado del proyecto en build4venezuela.com/projects.",
+        "Etiqueta a creadores o cuentas venezolanas que puedan amplificar.",
+        "Mantén el tono respetuoso: esperanza, no espectáculo."
+      ],
+      "linksEyebrow": "Enlaces clave",
+      "links": [
+        {
+          "label": "Proyectos",
+          "href": "/es/projects",
+          "text": "Comparte el directorio de herramientas listas o en progreso."
+        },
+        {
+          "label": "Kit de marca",
+          "href": "/es/brand#social",
+          "text": "Usa visuales listos para publicar y assets oficiales."
+        },
+        {
+          "label": "WhatsApp",
+          "href": "https://build4venezuela.com/whatsapp",
+          "text": "Lleva herramientas útiles a grupos comunitarios e informales."
+        }
+      ]
+    },
     "assets": {
       "eyebrow": "Assets",
       "title": "Logos y marcas",
@@ -95,30 +127,75 @@
       "mapAlt": "Mapa de Venezuela",
       "eyebrow": "Una hackathon humanitaria para",
       "title": "construir soluciones tech por Venezuela.",
-      "eventLink": "26, 27, 28 de junio // online // luma.com",
+      "closure": {
+        "label": "Evento de clausura",
+        "date": "Miércoles 1 de julio // 7:00 PM UTC-5 // online"
+      },
+      "countdown": {
+        "labels": {
+          "days": "Días",
+          "hours": "Horas",
+          "minutes": "Minutos",
+          "seconds": "Segundos",
+          "complete": "La clausura empezó. Sigamos construyendo."
+        }
+      },
       "whatsapp": "WhatsApp",
       "discord": "Discord",
-      "description": "Porque en momentos de crisis, la tecnología también puede ser una forma de solidaridad.",
+      "description": "El evento formal se clausura, pero el trabajo continúa: sigue mejorando tu proyecto, colabora con uno existente o propone lo que Venezuela todavía necesita.",
       "poweredBy": "Impulsado por"
     },
     "context": {
       "eyebrow": "Contexto",
-      "title": "Construir con urgencia, no con ruido.",
-      "firstParagraph": "Venezuela enfrenta una emergencia mayor después de dos fuertes terremotos el 24 de junio. Los reportes más recientes hablan de al menos 188 personas fallecidas y más de 1,500 heridas.",
-      "secondParagraph": "Equipos de rescate siguen buscando sobrevivientes. Vuelos de ayuda internacional y equipos de apoyo ya comenzaron a llegar, mientras hospitales, edificios y comunidades afectadas enfrentan una crisis humanitaria en desarrollo.",
+      "title": "Construir más allá de una semana.",
+      "firstParagraph": "Los terremotos dejaron problemas que necesitan ayuda ahora y que no se resolverán en una semana. Familias, voluntarios, organizaciones y comunidades siguen necesitando información confiable, coordinación, acceso a ayuda y herramientas que funcionen con conectividad limitada.",
+      "secondParagraph": "Build4Venezuela pasa de un sprint a un esfuerzo colectivo más largo: apoyo de corto plazo para la emergencia y soluciones de largo plazo que ayuden a Venezuela a recuperarse, coordinarse y hacerse más fuerte.",
       "latestInfo": "Ver información más reciente",
       "latestInfoQuery": "¿Qué es lo último sobre los terremotos en Venezuela?"
     },
     "impactStats": [
-      { "value": "188+", "label": "personas fallecidas" },
-      { "value": "1,500+", "label": "personas heridas" },
-      { "value": "346+", "label": "estructuras dañadas" },
-      { "value": "200+", "label": "personas posiblemente atrapadas" }
+      { "value": "01", "label": "sigue trabajando en tu proyecto" },
+      { "value": "02", "label": "colabora con un equipo existente" },
+      { "value": "03", "label": "propón un nuevo problema a resolver" },
+      { "value": "04", "label": "diseña para recuperación, no solo respuesta" }
     ],
+    "principles": {
+      "eyebrow": "Principios de acción colectiva",
+      "title": "La confianza es el sistema operativo.",
+      "description": "Estos principios guían código, comunicación, coordinación, diseño, mensajes en grupos e interacciones con medios. Si una decisión los contradice, hay que revisarla antes de avanzar.",
+      "items": [
+        {
+          "title": "Personas primero",
+          "text": "Construimos para alguien en Venezuela con poca señal, poca batería y necesidades urgentes, no para demos."
+        },
+        {
+          "title": "Sin duplicar",
+          "text": "Antes de construir algo nuevo, pregunta qué ya existe y cómo articularlo."
+        },
+        {
+          "title": "Confianza a largo plazo",
+          "text": "Seamos transparentes sobre qué funciona, qué no y qué puede hacer realmente cada herramienta."
+        },
+        {
+          "title": "Acción sin daño",
+          "text": "Respeta a equipos de rescate y organismos especializados. No amplifiques información no verificada ni satures canales de emergencia."
+        }
+      ],
+      "filter": {
+        "eyebrow": "Filtro de decisión",
+        "title": "Antes de publicar o construir",
+        "items": [
+          "¿Esto sirve a una persona real en Venezuela ahora mismo, o solo nos hace sentir útiles?",
+          "¿Estamos duplicando algo que ya existe, o podemos coordinarnos?",
+          "¿Esto genera confianza o genera confusión?",
+          "¿Puede interferir con rescates u organismos especializados?"
+        ]
+      }
+    },
     "projects": {
       "eyebrow": "Ideas de proyectos",
       "title": "Qué puedes construir",
-      "description": "Elige un problema concreto. Reduce el alcance. Deja algo que otra persona pueda usar el lunes."
+      "description": "Elige un problema concreto. Conecta con lo que ya existe. Deja algo útil para la emergencia y suficientemente duradero para la recuperación."
     },
     "projectIdeas": [
       "Directorios verificados de refugios, centros de acopio y atención médica.",
@@ -130,13 +207,13 @@
     ],
     "join": {
       "eyebrow": "Únete",
-      "title": "Ven con una habilidad. Sal con un proyecto."
+      "title": "Sigue construyendo después de la clausura."
     },
     "channels": [
       {
         "label": "Luma",
         "href": "https://build4venezuela.com/luma",
-        "text": "Regístrate al evento y recibe actualizaciones oficiales."
+        "text": "Únete al evento de clausura y recibe actualizaciones oficiales."
       },
       {
         "label": "WhatsApp",
@@ -146,7 +223,7 @@
       {
         "label": "Discord",
         "href": "https://build4venezuela.com/discord",
-        "text": "Encuentra equipo, canal de proyecto, mentores y soporte técnico."
+        "text": "Encuentra equipo, continúa un proyecto, propone uno nuevo y coordina apoyo."
       },
       {
         "label": "GitHub",
@@ -376,6 +453,11 @@
         "title": "Proyectos",
         "description": "Listado de proyectos en Google Sheets.",
         "kind": "Sheets"
+      },
+      "brand": {
+        "title": "Marca y brief de difusión",
+        "description": "Assets oficiales, guía para publicar y enlaces para que las herramientas lleguen a Venezuela.",
+        "kind": "Difusión"
       },
       "github": {
         "title": "GitHub",
