@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { headers } from "next/headers";
 import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { SponsorLink } from "@/components/sponsor-link";
 import { RealtimeVisitors } from "./realtime-visitors";
 
 const assetPath = "/BFV/assets/";
@@ -158,9 +159,11 @@ export default async function Home({ params }: Props) {
                 {t("hero.poweredBy")}
               </p>
               <div className="grid grid-cols-2 place-items-center justify-center gap-x-8 sm:gap-x-10">
-                <a
+                <SponsorLink
                   href="https://www.zavu.dev/"
+                  placement="homepage-powered-by"
                   rel="noreferrer"
+                  sponsor="Zavu"
                   target="_blank"
                   className="grid justify-items-center gap-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-background hover:opacity-100"
                 >
@@ -177,10 +180,12 @@ export default async function Home({ params }: Props) {
                   <span className="font-mono text-xs uppercase tracking-[0.28em] text-foreground/70">
                     Zavu
                   </span>
-                </a>
-                <a
+                </SponsorLink>
+                <SponsorLink
                   href="https://www.useinvent.com/"
+                  placement="homepage-powered-by"
                   rel="noreferrer"
+                  sponsor="Invent"
                   target="_blank"
                   className="grid justify-items-center gap-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-background hover:opacity-100"
                 >
@@ -197,7 +202,7 @@ export default async function Home({ params }: Props) {
                   <span className="font-mono text-xs uppercase tracking-[0.28em] text-foreground/70">
                     Invent
                   </span>
-                </a>
+                </SponsorLink>
               </div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { SponsorLink } from "./sponsor-link";
 
 const assetPath = "/BFV/assets/";
 
@@ -25,11 +26,13 @@ export async function SiteFooter() {
 
         <div className="grid w-full max-w-[460px] grid-cols-4 items-center gap-3 sm:max-w-[740px] sm:gap-10 md:w-auto">
           {partners.map((partner) => (
-            <a
+            <SponsorLink
               className="transition hover:opacity-75 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
               href={partner.href}
               key={partner.name}
+              placement="footer"
               rel="noreferrer"
+              sponsor={partner.name}
               target="_blank"
             >
               <Image
@@ -40,12 +43,14 @@ export async function SiteFooter() {
                 src={`${assetPath}${partner.image}`}
                 width={partner.width}
               />
-            </a>
+            </SponsorLink>
           ))}
-          <a
+          <SponsorLink
             className="transition hover:opacity-75 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
             href="http://nucleo.la/?utm_source=build4venezuela&utm_medium=referral&utm_campaign=partners"
+            placement="footer"
             rel="noreferrer"
+            sponsor="Nucleo"
             target="_blank"
           >
             <Image
@@ -56,7 +61,7 @@ export async function SiteFooter() {
               src={`${assetPath}nucleo-wordmark-blanco.png`}
               width={190}
             />
-          </a>
+          </SponsorLink>
         </div>
       </div>
     </footer>
