@@ -157,21 +157,48 @@ export default async function Home({ params }: Props) {
               <p className="font-mono text-xs uppercase tracking-[0.28em] text-muted-foreground">
                 {t("hero.poweredBy")}
               </p>
-              <a
-                href="https://www.zavu.dev/"
-                rel="noreferrer"
-                target="_blank"
-                className="transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-background hover:opacity-100"
-              >
-                <Image
-                  alt="Zavu"
-                  className="h-[min(40vw,200px)] w-auto select-none opacity-90 transition hover:opacity-100"
-                  draggable="false"
-                  height={1024}
-                  src={`${assetPath}zavu.svg`}
-                  width={1024}
-                />
-              </a>
+              <div className="grid grid-cols-2 place-items-center justify-center gap-x-8 sm:gap-x-10">
+                <a
+                  href="https://www.zavu.dev/"
+                  rel="noreferrer"
+                  target="_blank"
+                  className="grid justify-items-center gap-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-background hover:opacity-100"
+                >
+                  <span className="flex h-24 items-center justify-center sm:h-28">
+                    <Image
+                      alt="Zavu"
+                      className="h-20 w-auto select-none opacity-90 transition hover:opacity-100 sm:h-24"
+                      draggable="false"
+                      height={1024}
+                      src={`${assetPath}zavu.svg`}
+                      width={1024}
+                    />
+                  </span>
+                  <span className="font-mono text-xs uppercase tracking-[0.28em] text-foreground/70">
+                    Zavu
+                  </span>
+                </a>
+                <a
+                  href="https://www.useinvent.com/"
+                  rel="noreferrer"
+                  target="_blank"
+                  className="grid justify-items-center gap-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-background hover:opacity-100"
+                >
+                  <span className="flex h-24 items-center justify-center sm:h-28">
+                    <Image
+                      alt="Invent"
+                      className="h-14 w-auto select-none opacity-90 transition hover:opacity-100 sm:h-16"
+                      draggable="false"
+                      height={80}
+                      src={`${assetPath}invent.svg`}
+                      width={80}
+                    />
+                  </span>
+                  <span className="font-mono text-xs uppercase tracking-[0.28em] text-foreground/70">
+                    Invent
+                  </span>
+                </a>
+              </div>
             </div>
           </div>
         </article>
