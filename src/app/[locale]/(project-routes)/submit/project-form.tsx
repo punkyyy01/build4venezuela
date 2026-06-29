@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import type { ChangeEvent, FormEvent } from "react";
 import { useState } from "react";
+import { MarkdownEditor } from "@/components/markdown-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   ProjectFormError,
   projectQueryKeys,
@@ -111,6 +111,21 @@ export function ProjectForm({
         return nextErrors;
       });
     };
+  }
+
+  function setFieldValue(field: ProjectFormField, value: string) {
+    setValues((currentValues) => ({
+      ...currentValues,
+      [field]: value,
+    }));
+    setErrors((currentErrors) => {
+      const {
+        [field]: _fieldError,
+        form: _formError,
+        ...nextErrors
+      } = currentErrors;
+      return nextErrors;
+    });
   }
 
   function submitProject(event: FormEvent<HTMLFormElement>) {
@@ -252,15 +267,17 @@ export function ProjectForm({
         <FieldError message={errors.contributeInUrl} />
       </label>
 
-      <label className="grid gap-2" htmlFor="project-description">
-        <span className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+      <div className="grid gap-2">
+        <label
+          className="font-mono text-muted-foreground text-xs font-bold uppercase tracking-[0.18em]"
+          htmlFor="project-description"
+        >
           {t("descriptionMarkdownLabel")}
-        </span>
-        <Textarea
-          className="min-h-64 text-sm leading-6"
+        </label>
+        <MarkdownEditor
           id="project-description"
           name="descriptionMarkdown"
-          onChange={handleValueChange("descriptionMarkdown")}
+          onChange={(value) => setFieldValue("descriptionMarkdown", value)}
           placeholder={t("descriptionMarkdownPlaceholder")}
           required
           value={values.descriptionMarkdown}
@@ -272,7 +289,7 @@ export function ProjectForm({
           {values.descriptionMarkdown.length} / 12000
         </p>
         <FieldError message={errors.descriptionMarkdown} />
-      </label>
+      </div>
 
       <Button
         className="h-12 text-sm uppercase tracking-[0.18em]"
