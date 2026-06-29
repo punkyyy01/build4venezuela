@@ -8,6 +8,9 @@
     "mobileBrand": "B4B",
     "navigationLabel": "Main navigation",
     "brandPageLink": "Brand",
+    "openMenuLabel": "Open Build4Venezuela menu",
+    "homeLink": "Home",
+    "projectsLink": "Projects",
     "languageSelector": {
       "label": "Language",
       "locales": {
@@ -78,6 +81,16 @@
         }
       }
     }
+  },
+  "ProjectsPage": {
+    "noProjects": "No projects yet. Be the first one to add a build.",
+    "syncingFeed": "Syncing live feed...",
+    "liveFeedEnabled": "Live feed enabled"
+  },
+  "CommentsSection": {
+    "noComments": "No comments yet. Start the thread with a sharp question or useful suggestion.",
+    "voted": "Voted",
+    "vote": "Vote"
   },
   "HomePage": {
     "hero": {

@@ -8,6 +8,9 @@
     "mobileBrand": "B4B",
     "navigationLabel": "主导航",
     "brandPageLink": "品牌",
+    "openMenuLabel": "打开 Build4Venezuela 菜单",
+    "homeLink": "首页",
+    "projectsLink": "项目",
     "languageSelector": {
       "label": "语言",
       "locales": {
@@ -78,6 +81,16 @@
         }
       }
     }
+  },
+  "ProjectsPage": {
+    "noProjects": "暂无项目。成为第一个添加项目的人吧。",
+    "syncingFeed": "正在同步实时信息...",
+    "liveFeedEnabled": "实时信息已启用"
+  },
+  "CommentsSection": {
+    "noComments": "暂无评论。用一个尖锐的问题或有用的建议开始对话吧。",
+    "voted": "已投票",
+    "vote": "投票"
   },
   "HomePage": {
     "hero": {

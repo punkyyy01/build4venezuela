@@ -8,6 +8,9 @@
     "mobileBrand": "B4B",
     "navigationLabel": "Navegação principal",
     "brandPageLink": "Marca",
+    "openMenuLabel": "Abrir o menu Build4Venezuela",
+    "homeLink": "Início",
+    "projectsLink": "Projetos",
     "languageSelector": {
       "label": "Idioma",
       "locales": {
@@ -78,6 +81,16 @@
         }
       }
     }
+  },
+  "ProjectsPage": {
+    "noProjects": "Nenhum projeto ainda. Seja o primeiro a adicionar o seu.",
+    "syncingFeed": "Sincronizando feed ao vivo...",
+    "liveFeedEnabled": "Feed ao vivo ativado"
+  },
+  "CommentsSection": {
+    "noComments": "Sem comentários ainda. Inicie a conversa com uma pergunta ou sugestão útil.",
+    "voted": "Votado",
+    "vote": "Votar"
   },
   "HomePage": {
     "hero": {

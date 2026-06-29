@@ -2,6 +2,7 @@
 
 import { SignInButton, useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { type FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +32,7 @@ export function CommentsSection({
   initialComments,
   initialSignedIn,
 }: CommentsSectionProps) {
+  const t = useTranslations("CommentsSection");
   const { isSignedIn } = useUser();
   const signedIn = isSignedIn ?? initialSignedIn;
   const queryClient = useQueryClient();
@@ -361,7 +363,8 @@ export function CommentsSection({
                     type="button"
                     variant={comment.voted ? "default" : "outline"}
                   >
-                    {comment.voted ? "Voted" : "Vote"} ({comment.votesCount})
+                    {comment.voted ? t("voted") : t("vote")} (
+                    {comment.votesCount})
                   </Button>
                 ) : (
                   <SignInButton mode="modal">
@@ -383,8 +386,7 @@ export function CommentsSection({
         ) : (
           <div className="bg-background p-5">
             <p className="font-mono text-sm uppercase leading-6 tracking-[0.14em] text-muted-foreground">
-              No comments yet. Start the thread with a sharp question or useful
-              suggestion.
+              {t("noComments")}
             </p>
           </div>
         )}

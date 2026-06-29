@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { ProjectVideoEmbed } from "@/components/project-video-embed";
 import { createBrowserSupabase } from "@/lib/projects/browser-supabase";
@@ -18,6 +19,7 @@ type ProjectVotePayload = {
 export function RealtimeProjectsGrid({
   initialProjects,
 }: RealtimeProjectsGridProps) {
+  const t = useTranslations("ProjectsPage");
   const queryClient = useQueryClient();
   const { data: projects = [], isFetching } = useQuery({
     initialData: initialProjects,
@@ -92,7 +94,7 @@ export function RealtimeProjectsGrid({
     return (
       <div className="border border-border bg-card p-8">
         <p className="font-mono text-lg uppercase leading-8 tracking-[0.14em] text-muted-foreground">
-          No projects yet. Be the first one to add a build.
+          {t("noProjects")}
         </p>
       </div>
     );
@@ -102,7 +104,7 @@ export function RealtimeProjectsGrid({
     <div className="relative">
       <div className="mb-3 flex justify-end">
         <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
-          {isFetching ? "Syncing live feed..." : "Live feed enabled"}
+          {isFetching ? t("syncingFeed") : t("liveFeedEnabled")}
         </p>
       </div>
       <div className="grid gap-px bg-border md:grid-cols-2 lg:grid-cols-3">

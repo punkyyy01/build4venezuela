@@ -3,6 +3,7 @@ import { shadcn } from "@clerk/ui/themes";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { getLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { QueryProvider } from "./query-provider";
@@ -70,10 +71,15 @@ export const metadata: Metadata = {
   description: "Build projects for Venezuelans.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const locale = await getLocale();
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${inputMonoNarrow.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background text-foreground">
