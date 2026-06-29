@@ -272,8 +272,22 @@
       "all": "Todos",
       "project": "proyecto",
       "projects": "proyectos",
+      "open": "Abrir",
       "vote": "voto",
       "votes": "votos",
+      "views": {
+        "grid": "Cuadrícula",
+        "list": "Lista"
+      },
+      "table": {
+        "project": "Proyecto",
+        "status": "Estado",
+        "category": "Categoría",
+        "countries": "Países",
+        "builder": "Autor",
+        "votes": "Votos",
+        "link": "Enlace"
+      },
       "statuses": {
         "all": "Todos los estados",
         "ready_to_use": "Listo para usar",

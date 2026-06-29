@@ -272,8 +272,22 @@
       "all": "All",
       "project": "project",
       "projects": "projects",
+      "open": "Open",
       "vote": "vote",
       "votes": "votes",
+      "views": {
+        "grid": "Grid",
+        "list": "List"
+      },
+      "table": {
+        "project": "Project",
+        "status": "Status",
+        "category": "Category",
+        "countries": "Countries",
+        "builder": "Builder",
+        "votes": "Votes",
+        "link": "Link"
+      },
       "statuses": {
         "all": "All statuses",
         "ready_to_use": "Ready to use",
