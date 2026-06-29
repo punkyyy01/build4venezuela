@@ -82,6 +82,13 @@ const allowedVideoHosts = [
   "www.screen.studio",
   "screenstudio.com",
   "www.screenstudio.com",
+  "instagram.com",
+  "www.instagram.com",
+  "tiktok.com",
+  "www.tiktok.com",
+  "m.tiktok.com",
+  "vm.tiktok.com",
+  "vt.tiktok.com",
 ];
 
 const slugSchema = z
@@ -118,7 +125,7 @@ export const projectFormSchema = z.object({
       } catch {
         return false;
       }
-    }, "Use YouTube, Vimeo, Loom, Screen Studio, or a similar hosted video link."),
+    }, "Use YouTube, Vimeo, Loom, Screen Studio, Instagram, TikTok, or a similar hosted video link."),
   contributeInUrl: z
     .string()
     .trim()

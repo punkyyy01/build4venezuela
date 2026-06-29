@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { type Project, sortProjectsByVotes } from "./schema";
+import { type Project, projectFormSchema, sortProjectsByVotes } from "./schema";
 
 function project(overrides: Partial<Project>): Project {
   return {
@@ -44,4 +44,32 @@ test("sortProjectsByVotes prioritizes video when vote counts tie", () => {
     "older-with-video",
     "newer-no-video",
   ]);
+});
+
+test("projectFormSchema accepts common demo video hosts", () => {
+  const baseProject = {
+    slug: "project-slug",
+    name: "Project",
+    lifecycleStatus: "ready_to_use",
+    projectUrl: "https://example.com",
+    countries: "Venezuela",
+    participantName: "Team",
+    contributeInUrl: "",
+    descriptionMarkdown:
+      "This is a complete project description with enough detail to satisfy the minimum length requirement.",
+  };
+
+  for (const videoUrl of [
+    "https://youtu.be/abc123",
+    "https://vimeo.com/123456789",
+    "https://www.loom.com/share/abc123",
+    "https://screen.studio/share/abc123",
+    "https://www.instagram.com/reel/abc123/",
+    "https://www.tiktok.com/@team/video/123456789",
+    "https://vm.tiktok.com/abc123/",
+  ]) {
+    expect(
+      projectFormSchema.safeParse({ ...baseProject, videoUrl }).success,
+    ).toBe(true);
+  }
 });
