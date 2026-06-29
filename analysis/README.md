@@ -12,7 +12,13 @@ decide which projects are ready to spotlight.
 - `insights.json` — machine-readable master record (28 projects): raw git/GitHub
   signals + technical analysis + product evaluation, merged per project.
 - `insights/<slug>.json` — one record per project.
-- `tools/` — the reusable pipeline (see below).
+- `tools/` — the reusable pipeline scripts + saved AI workflows.
+- **`UPDATE.md` — step-by-step runbook to refresh everything when there are more
+  repos. Start there to re-run.**
+
+The data also powers the **`/insights`** dashboard (internal triage page):
+`src/app/[locale]/(project-routes)/insights/`, fed by
+`src/lib/insights/dataset.json` (generated from `insights.json`).
 
 ## Coverage
 
@@ -22,20 +28,23 @@ private / 404 / a user-profile link.
 
 ## Pipeline (how to re-run)
 
-1. **Extract repos** from the DB (heuristic: first `github.com` URL found in
-   `contribute_in_url`, then `project_url`, then `description_markdown`;
-   deduped by repo). Output: `tools/repo-list.json`.
+**See [`UPDATE.md`](./UPDATE.md) for the full step-by-step runbook.** In short:
+
+1. **Extract repos + metadata** from the DB (`tools/extract-repos.ts`,
+   `tools/export-meta.ts`).
 2. **Collect signals** — `tools/batch-collect.sh` shallow-clones each repo and
    scrapes stars/commits/contributors/LOC/languages via `gh` + `git`
-   (`tools/collect-signals.sh` does one repo). Requires an authenticated `gh`.
-3. **Analyze** — one agent per repo reads the cloned code and emits the
-   technical schema (stack, architecture incl. ORM detection, code organization,
-   production-readiness, maturity, viability, domain tags, red flags).
-4. **Evaluate** — one agent per project reads the analysis + public metadata and
-   fetches the live demo to score real-problem fit, product quality, and
-   diffusion readiness.
-5. **Merge + report** — join analysis + signals + DB metadata → `insights.json`
-   → `INSIGHTS-REPORT.md`.
+   (`tools/collect-signals.sh` does one repo).
+3. **Analyze** (AI workflow `tools/workflows/analyze.workflow.js`) — one agent
+   per repo emits the technical schema (stack, architecture incl. ORM detection,
+   code organization, production-readiness, maturity, viability, domain tags,
+   red flags).
+4. **Evaluate** (AI workflow `tools/workflows/evaluate.workflow.js`) — one agent
+   per project reads the analysis + public metadata and fetches the live demo to
+   score real-problem fit, product quality, and diffusion readiness.
+5. **Merge + report** — `tools/merge-insights.sh` joins analysis + signals + DB
+   metadata → `insights.json`; `tools/gen-report.sh` → `INSIGHTS-REPORT.md`.
+6. **Rebuild dashboard data** — `bun scripts/gen-insights-dataset.mjs`.
 
 ## Loading into the database (not yet applied)
 
